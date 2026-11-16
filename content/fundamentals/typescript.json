@@ -1,0 +1,55 @@
+[
+  {
+    "id": "ts-unknown-vs-any",
+    "kind": "flip",
+    "title": "unknown vs any",
+    "prompt": "You parse JSON from an API. Why type it <code>unknown</code> instead of <code>any</code>?",
+    "explanation": "<code>any</code> turns type checking off, so anything compiles. <code>unknown</code> makes you narrow first (a <code>typeof</code> check, a type guard or a zod parse), so bad API data fails at the boundary instead of deep inside your code.",
+    "hint": "Which of the two lets you write <code>data.foo.bar</code> with no checks at all?",
+    "tags": ["typescript", "types"]
+  },
+  {
+    "id": "ts-as-const",
+    "kind": "mcq",
+    "title": "as const",
+    "prompt": "What is the type of <code>x</code>?",
+    "code": "const x = ['a', 'b'] as const;",
+    "choices": ["<code>string[]</code>", "<code>('a' | 'b')[]</code>", "<code>readonly ['a', 'b']</code>", "<code>readonly string[]</code>"],
+    "correct": 2,
+    "explanation": "<code>as const</code> infers the narrowest type: literal types, readonly, and a fixed-length tuple. <code>(typeof x)[number]</code> then gives the union <code>'a' | 'b'</code>, a common way to build a union from a list.",
+    "hint": "<code>as const</code> keeps every detail it can: literal values, length and mutability.",
+    "tags": ["typescript", "types"]
+  },
+  {
+    "id": "ts-exhaustive-never",
+    "kind": "mcq",
+    "title": "Exhaustive switch",
+    "prompt": "What does the <code>never</code> line do?",
+    "code": "switch (shape.kind) {\n  case 'circle': return area(shape);\n  case 'square': return side(shape);\n  default:\n    const _check: never = shape;\n}",
+    "choices": ["Throws at runtime for unknown shapes", "Fails to compile when a new <code>kind</code> is added but not handled", "Silences the unused-variable warning", "Casts <code>shape</code> to any"],
+    "correct": 1,
+    "explanation": "After every case is handled, TypeScript narrows <code>shape</code> to <code>never</code>. Add a <code>'triangle'</code> variant and forget its case, and <code>shape</code> isn't <code>never</code> any more, so the assignment fails to compile.",
+    "hint": "What type is <code>shape</code> once every case has been handled?",
+    "tags": ["typescript", "narrowing"]
+  },
+  {
+    "id": "ts-type-vs-interface",
+    "kind": "flip",
+    "title": "type vs interface",
+    "prompt": "<code>type</code> or <code>interface</code>: when does the choice actually matter?",
+    "explanation": "For object shapes, either works. Pick one convention. Only <code>type</code> can express unions, mapped types and conditional types. Only <code>interface</code> supports declaration merging (two declarations combine), which is useful for extending library types.",
+    "hint": "One can describe unions. The other can be declared twice and merged.",
+    "tags": ["typescript", "types"]
+  },
+  {
+    "id": "ts-narrowing-in",
+    "kind": "mcq",
+    "title": "Narrowing with in",
+    "prompt": "<code>type Pet = Fish | Bird</code>. <code>Fish</code> has <code>swim()</code> and <code>Bird</code> has <code>fly()</code>. Which check narrows <code>pet</code> to <code>Fish</code>?",
+    "choices": ["<code>if (pet instanceof Fish)</code>", "<code>if ('swim' in pet)</code>", "<code>if (typeof pet === 'Fish')</code>", "<code>if (pet as Fish)</code>"],
+    "correct": 1,
+    "explanation": "The <code>in</code> operator narrows a union by property. <code>instanceof</code> only works with classes, not type aliases. <code>typeof</code> only returns JavaScript's runtime type names. <code>as</code> is an assertion with no runtime check.",
+    "hint": "Types are erased at runtime. Which check looks at the object itself?",
+    "tags": ["typescript", "narrowing"]
+  }
+]

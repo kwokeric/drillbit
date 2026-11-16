@@ -1,0 +1,88 @@
+[
+  {
+    "id": "bug-default-sort",
+    "kind": "bug",
+    "title": "Median of [10, 9, 2] is 2",
+    "prompt": "<code>median([10, 9, 2])</code> should return 9. Returns 2.",
+    "code": "function median(nums) {\n  const sorted = nums.sort();\n  const mid = Math.floor(sorted.length / 2);\n  return sorted.length % 2\n    ? sorted[mid]\n    : (sorted[mid - 1] + sorted[mid]) / 2;\n}",
+    "bugLines": [2],
+    "fix": "const sorted = [...nums].sort((a, b) => a - b);",
+    "explanation": "Default <code>sort()</code> compares values as strings, so <code>[10, 9, 2]</code> becomes <code>[10, 2, 9]</code>. It also sorts the caller's array in place.",
+    "hint": "What does <code>sort()</code> compare by when you pass no function?",
+    "tags": ["arrays", "sorting"]
+  },
+  {
+    "id": "bug-reduce-no-initial",
+    "kind": "bug",
+    "title": "Cart total is \"[object Object]25\"",
+    "prompt": "With two items in stock, the total comes back as a string.",
+    "code": "function cartTotal(carts) {\n  const inStock = carts.filter((c) => c.inStock);\n  return inStock.reduce((sum, c) => sum + c.price);\n}",
+    "bugLines": [3],
+    "fix": "return inStock.reduce((sum, c) => sum + c.price, 0);",
+    "explanation": "With no initial value, the first <code>sum</code> is the first cart <i>object</i>, and object + number concatenates as strings. An empty array would throw a TypeError instead.",
+    "hint": "What is <code>sum</code> on the very first call?",
+    "tags": ["arrays", "coercion"]
+  },
+  {
+    "id": "bug-fill-shared-array",
+    "kind": "bug",
+    "title": "Every node is connected to everything",
+    "prompt": "<code>buildGraph(3, [[0, 1]])</code> gives every node the neighbors <code>[1, 0]</code>.",
+    "code": "function buildGraph(n, edges) {\n  const adj = new Array(n).fill([]);\n  for (const [a, b] of edges) {\n    adj[a].push(b);\n    adj[b].push(a);\n  }\n  return adj;\n}",
+    "bugLines": [2],
+    "symptomLines": [4, 5],
+    "fix": "const adj = Array.from({ length: n }, () => []);",
+    "explanation": "<code>fill([])</code> creates one array and puts that same array in every slot, so every push goes to the shared list. <code>Array.from</code> with a factory makes a new array per slot.",
+    "hint": "How many arrays does <code>fill([])</code> create?",
+    "tags": ["arrays", "graphs", "references"]
+  },
+  {
+    "id": "bug-set-of-arrays",
+    "kind": "bug",
+    "title": "Visited set never matches",
+    "prompt": "Grid DFS never stops: <code>visit(0, 0)</code> returns <code>true</code> every time.",
+    "code": "const visited = new Set();\nfunction visit(r, c) {\n  if (visited.has([r, c])) return false;\n  visited.add([r, c]);\n  return true;\n}",
+    "bugLines": [3, 4],
+    "fix": "const key = r + ',' + c;\nif (visited.has(key)) return false;\nvisited.add(key);",
+    "explanation": "Sets compare objects by reference. Every <code>[r, c]</code> literal is a brand-new array, so <code>has</code> never finds a match. Use a string key like <code>'0,0'</code>, or <code>r * cols + c</code>.",
+    "hint": "Are two arrays with the same contents equal to each other?",
+    "tags": ["references", "grids", "graphs"]
+  },
+  {
+    "id": "bug-two-sum-falsy-index",
+    "kind": "bug",
+    "title": "Two sum misses index 0",
+    "prompt": "<code>twoSum([3, 4], 7)</code> should return <code>[0, 1]</code>. Returns <code>[]</code>.",
+    "code": "function twoSum(nums, target) {\n  const seen = {};\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (seen[need]) return [seen[need], i];\n    seen[nums[i]] = i;\n  }\n  return [];\n}",
+    "bugLines": [5],
+    "fix": "if (seen[need] !== undefined) return [seen[need], i];",
+    "explanation": "The stored index can be <code>0</code>, which is falsy, so the check fails exactly when the match is the first element. Check for <code>undefined</code>, or use a <code>Map</code> with <code>has()</code>.",
+    "hint": "Which stored value would make that <code>if</code> fail even though it exists?",
+    "tags": ["coercion", "hash map"]
+  },
+  {
+    "id": "bug-typeof-null",
+    "kind": "bug",
+    "title": "getName(null) throws",
+    "prompt": "<code>getName(null)</code> throws a TypeError instead of returning <code>'unknown'</code>.",
+    "code": "function isObject(v) {\n  return typeof v === 'object';\n}\nfunction getName(v) {\n  return isObject(v) ? v.name : 'unknown';\n}",
+    "bugLines": [2],
+    "symptomLines": [5],
+    "fix": "return typeof v === 'object' && v !== null;",
+    "explanation": "<code>typeof null</code> is <code>'object'</code>, a bug kept for backwards compatibility. Any \"is object\" check needs an explicit <code>!== null</code>.",
+    "hint": "What is <code>typeof null</code>?",
+    "tags": ["types", "coercion"]
+  },
+  {
+    "id": "bug-string-compare",
+    "kind": "bug",
+    "title": "Highest score is 9, not 10",
+    "prompt": "<code>input</code> is <code>\"9,10,2\"</code>. Prints 9 instead of 10.",
+    "code": "const scores = input.split(',');\nlet best = scores[0];\nfor (const s of scores) {\n  if (s > best) best = s;\n}\nconsole.log(best);",
+    "bugLines": [1, 4],
+    "fix": "const scores = input.split(',').map(Number);",
+    "explanation": "<code>split</code> returns strings, and strings compare character by character, so <code>'9' &gt; '10'</code>. Convert to numbers first.",
+    "hint": "What type are the items <code>split</code> returns?",
+    "tags": ["coercion", "strings"]
+  }
+]

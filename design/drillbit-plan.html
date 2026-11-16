@@ -1,0 +1,707 @@
+<title>Drillbit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: plan document column (68ch prose) with a wrapping row of live phone mocks up top; cards are plain surfaces with a colored header rule. */
+:root {
+  --bg: #EEF1F5; --surface: #FFFFFF; --app: #F6F7FA; --ink: #141B27; --muted: #586377; --line: #D5DBE4;
+  --accent: #2A55E0; --accent-ink: #FFFFFF; --accent-soft: #E3EAFD;
+  --margin: #E2545C; --hi: #FFE48A;
+  --ok: #17804F; --ok-bg: #DCF2E6; --bad: #C2333B; --bad-bg: #FBE2E3;
+  --phone: #121823; --code-bg: #F3F5FA;
+  --tk: #7A3FD1; --ts: #17804F; --tn: #B85600; --tc: #7D8799;
+  --display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0B0F16; --surface: #151B26; --app: #10151E; --ink: #E4E9F1; --muted: #93A0B4; --line: #263042;
+  --accent: #7E9CFF; --accent-ink: #0B0F16; --accent-soft: #1C2744;
+  --margin: #FF7078; --hi: #5B4B14;
+  --ok: #52D392; --ok-bg: #12301F; --bad: #FF7D83; --bad-bg: #3A1A1E;
+  --phone: #2A3242; --code-bg: #0E131B;
+  --tk: #C39DFF; --ts: #72D9A2; --tn: #FFAD60; --tc: #6D798D; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0B0F16; --surface: #151B26; --app: #10151E; --ink: #E4E9F1; --muted: #93A0B4; --line: #263042;
+  --accent: #7E9CFF; --accent-ink: #0B0F16; --accent-soft: #1C2744;
+  --margin: #FF7078; --hi: #5B4B14;
+  --ok: #52D392; --ok-bg: #12301F; --bad: #FF7D83; --bad-bg: #3A1A1E;
+  --phone: #2A3242; --code-bg: #0E131B;
+  --tk: #C39DFF; --ts: #72D9A2; --tn: #FFAD60; --tc: #6D798D; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; }
+.wrap { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); border: 1px solid var(--line); padding: 0 4px; border-radius: 4px; }
+a { color: var(--accent); }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.prose { max-width: 68ch; display: flex; flex-direction: column; gap: 14px; }
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 60ch; }
+section { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+
+header { display: flex; flex-direction: column; gap: 14px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { font-family: var(--mono); font-size: 0.75rem; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+
+/* ---------- phones ---------- */
+.phones { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px; }
+.mock { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 290px; max-width: 100%; }
+.mock figcaption { font-size: 0.85rem; color: var(--muted); text-align: center; max-width: 34ch; }
+.mock figcaption b { color: var(--ink); font-family: var(--display); }
+figure { margin: 0; }
+.phone { width: 290px; max-width: 100%; height: 600px; border: 9px solid var(--phone); border-radius: 42px; background: var(--app);
+  overflow: hidden; display: flex; flex-direction: column; font-size: 13px; line-height: 1.45; box-shadow: 0 18px 40px -22px rgba(10, 20, 40, 0.45); position: relative; }
+.status { display: flex; justify-content: space-between; align-items: center; padding: 10px 22px 4px; font-family: var(--display); font-weight: 700; font-size: 12px; }
+.notch { width: 74px; height: 20px; background: var(--phone); border-radius: 12px; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 6px 14px 8px; }
+.iconbtn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 13px; display: grid; place-items: center; }
+.pbar { flex: 1; height: 6px; background: var(--line); border-radius: 9px; overflow: hidden; }
+.pbar span { display: block; height: 100%; background: var(--accent); border-radius: 9px; }
+.count { font-family: var(--mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pbody { flex: 1; overflow-y: auto; padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.dock { padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.hint { text-align: center; color: var(--muted); font-size: 12px; }
+
+.icard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.icard-head { padding: 10px 12px 8px; border-bottom: 2px solid var(--margin); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.icard-body { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.hintbox { border: 1px dashed var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 7px 10px; font-size: 12px; display: flex; gap: 6px; }
+.hintbox b { color: var(--accent); font-family: var(--display); flex: none; }
+.dock-row { display: flex; gap: 8px; align-items: center; }
+.dock-row > .hint { flex: 1; text-align: left; }
+.btn.hintbtn { width: auto; flex: none; padding: 12px 14px; }
+.grade:disabled { opacity: 0.4; cursor: default; }
+.kind { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.k-bug { color: var(--bad); } .k-js { color: var(--tn); } .k-pat { color: var(--accent); } .k-one { color: var(--ok); }
+.lc { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+.prompt { font-weight: 500; }
+.prompt-title { font-family: var(--display); font-weight: 700; font-size: 15px; line-height: 1.25; }
+
+.code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; font-family: var(--mono); font-size: 11px; line-height: 1.6; overflow-x: auto; padding: 6px 0; }
+.code .ln { display: flex; width: 100%; text-align: left; border: 0; background: transparent; color: var(--ink); font: inherit; padding: 0 8px 0 0; cursor: pointer; white-space: pre; }
+.code .ln:hover { background: var(--accent-soft); }
+.code .ln:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.code .no { width: 26px; flex: none; text-align: right; padding-right: 8px; color: var(--tc); user-select: none; }
+.code .ln.hit { background: var(--hi); }
+.code .ln.miss { background: var(--bad-bg); }
+.code.static .ln { cursor: default; } .code.static .ln:hover { background: transparent; }
+.tk { color: var(--tk); } .ts { color: var(--ts); } .tn { color: var(--tn); } .tc { color: var(--tc); font-style: italic; }
+
+.reveal { border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); background: var(--surface); }
+.reveal.good { border-color: var(--ok); }
+.reveal.bad { border-color: var(--bad); }
+.verdict { font-family: var(--display); font-weight: 700; font-size: 14px; }
+.reveal.good .verdict { color: var(--ok); } .reveal.bad .verdict { color: var(--bad); }
+.reveal code { font-size: 10.5px; }
+.meta-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+
+.grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.grade { border: 1px solid var(--line); background: var(--app); color: var(--ink); border-radius: 10px; padding: 7px 0 6px; font: 600 12px var(--body); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.grade small { font: 400 10px var(--mono); color: var(--muted); }
+.grade:hover, .grade:focus-visible { border-color: var(--accent); outline: none; }
+.grade.again { color: var(--bad); } .grade.good { color: var(--ok); }
+.btn { border: 0; border-radius: 12px; padding: 12px; font: 600 14px var(--body); background: var(--accent); color: var(--accent-ink); cursor: pointer; width: 100%; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:focus-visible, .chip:focus-visible, .opt:focus-visible, .fchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 6px 11px; font: 500 12px var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.c-ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.chip.c-missed { background: transparent; color: var(--ok); border: 1px dashed var(--ok); }
+.chip.c-bad { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); text-decoration: line-through; }
+.chip:disabled { cursor: default; }
+
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opt { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 9px 10px; font: 500 12.5px var(--body); cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+.opt .letter { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.opt.o-ok { border-color: var(--ok); background: var(--ok-bg); }
+.opt.o-bad { border-color: var(--bad); background: var(--bad-bg); }
+.opt:disabled { cursor: default; }
+.opt code, .reveal code, .prompt code { font-size: 0.86em; }
+
+.oneline { display: flex; flex-direction: column; gap: 6px; }
+.oneline input { width: 100%; font: 12px var(--mono); padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--code-bg); color: var(--ink); }
+.oneline input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.symbar { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.sym { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 7px 0; font: 600 12px var(--mono); cursor: pointer; }
+
+.toast { position: absolute; left: 16px; right: 16px; bottom: 90px; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 9px 12px; font-size: 12px; text-align: center; }
+
+/* home screen */
+.hello { display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 2px 2px; }
+.hello h4 { font: 800 22px var(--display); margin: 0; }
+.streak { font: 600 11px var(--mono); color: var(--tn); }
+.today { background: var(--accent); color: var(--accent-ink); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.today .nums { display: flex; gap: 18px; }
+.today .nums div { display: flex; flex-direction: column; }
+.today .nums b { font: 800 24px var(--display); font-variant-numeric: tabular-nums; line-height: 1; }
+.today .nums span { font-size: 11px; opacity: 0.85; }
+.today .go { background: var(--accent-ink); color: var(--accent); border: 0; border-radius: 10px; padding: 10px; font: 700 13px var(--body); }
+.decks { display: flex; flex-direction: column; gap: 8px; }
+.deck { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.deck-top { display: flex; justify-content: space-between; align-items: baseline; }
+.deck-top b { font-family: var(--display); font-size: 13px; }
+.deck-top span { font: 11px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 5px; background: var(--line); border-radius: 9px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 9px; }
+.minis { display: flex; gap: 6px; }
+.mini { flex: 1; border: 1px dashed var(--line); border-radius: 10px; padding: 8px; font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.mini b { color: var(--ink); font-family: var(--display); font-size: 12px; }
+.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); background: var(--surface); padding: 8px 0 14px; font-size: 11px; text-align: center; color: var(--muted); }
+.tabbar .on { color: var(--accent); font-weight: 600; }
+
+/* ---------- plan ---------- */
+.types { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.type { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.type p { font-size: 0.93rem; }
+.type .how { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+pre.block { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 13px/1.6 var(--mono); }
+ul.clean { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+.two > * { min-width: 0; }
+.phase { display: grid; grid-template-columns: 90px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.phase:first-child { border-top: 0; }
+.phase .when { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+.phase p { font-size: 0.95rem; }
+.patterns { display: flex; flex-wrap: wrap; gap: 6px; }
+.patterns span { font-size: 0.82rem; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.callout { border-left: 3px solid var(--margin); padding: 4px 0 4px 14px; color: var(--muted); font-size: 0.95rem; max-width: 68ch; }
+
+/* sample deck */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.fchip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 6px 14px; font: 500 0.85rem var(--body); cursor: pointer; }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.samples { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; align-items: start; }
+.sample { font-size: 0.92rem; }
+.sample .icard-body { gap: 10px; }
+.sample .code { font-size: 12px; }
+.sample ol { margin: 0; padding-left: 1.4em; font-size: 0.88rem; }
+.sample details summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 0.88rem; }
+.sample details[open] summary { margin-bottom: 6px; }
+.sample details.hintd summary { color: var(--muted); font-weight: 500; }
+.sample .ans { font-size: 0.88rem; background: var(--surface); border-radius: 8px; padding: 2px 0; display: flex; flex-direction: column; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .chip, .opt, .grade, .code .ln { transition: background-color .15s, border-color .15s; } }
+@media (max-width: 480px) { .phase { grid-template-columns: 1fr; gap: 4px; } body { padding-block: 24px 56px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Design plan · v0.1 · Nov 2026</span>
+    <h1>Drillbit</h1>
+    <p class="lede">Interview prep cue cards for your phone. Spot bugs, recall JS/TS fundamentals, and name the pattern behind LeetCode problems, all with taps. You never write more than one line of code.</p>
+    <div class="tags"><span class="tag">Web app (PWA)</span><span class="tag">Works offline</span><span class="tag">Spaced repetition</span><span class="tag">Static deploy · no backend</span></div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">Mocks · these are interactive, try them</span><h2>Five screens</h2></div>
+    <div class="phones">
+
+      <figure class="mock">
+        <div class="phone">
+          <div class="status"><span>8:14</span><span class="notch"></span><span>5G</span></div>
+          <div class="pbody">
+            <div class="hello"><h4>Today</h4><span class="streak">6-day streak</span></div>
+            <div class="today">
+              <div class="nums"><div><b>12</b><span>due</span></div><div><b>5</b><span>new</span></div><div><b>~9</b><span>min</span></div></div>
+              <button class="go" type="button">Start session</button>
+            </div>
+            <div class="decks">
+              <div class="deck"><div class="deck-top"><b>Spot the bug</b><span>18 / 42</span></div><div class="meter"><i style="width:43%;background:var(--bad)"></i></div></div>
+              <div class="deck"><div class="deck-top"><b>JS / TS fundamentals</b><span>37 / 60</span></div><div class="meter"><i style="width:62%;background:var(--tn)"></i></div></div>
+              <div class="deck"><div class="deck-top"><b>Algo patterns</b><span>21 / 75</span></div><div class="meter"><i style="width:28%;background:var(--accent)"></i></div></div>
+              <div class="deck"><div class="deck-top"><b>One-liners</b><span>9 / 20</span></div><div class="meter"><i style="width:45%;background:var(--ok)"></i></div></div>
+            </div>
+            <div class="minis">
+              <div class="mini"><b>Weak spots</b>Sliding window, <code>this</code></div>
+              <div class="mini"><b>Cram</b>Pick tags, ignore schedule</div>
+            </div>
+          </div>
+          <div class="tabbar"><span class="on">Today</span><span>Decks</span><span>Stats</span></div>
+        </div>
+        <figcaption><b>Home.</b> One button starts the day's session. Mastery per deck, plus Weak spots and Cram modes.</figcaption>
+      </figure>
+
+      <figure class="mock">
+        <div class="phone" id="ph-bug">
+          <div class="status"><span>8:15</span><span class="notch"></span><span>5G</span></div>
+          <div class="topbar"><span class="iconbtn">✕</span><div class="pbar"><span style="width:18%"></span></div><span class="count">3/17</span></div>
+          <div class="pbody">
+            <div class="icard">
+              <div class="icard-head"><span class="kind k-bug">Spot the bug</span><span class="lc">async · arrays</span></div>
+              <div class="icard-body">
+                <p class="prompt">Should return every user. Callers always get <code>[]</code>. Tap the line that causes it.</p>
+                <div class="code" id="bug-code"></div>
+              </div>
+            </div>
+            <div class="reveal" id="bug-reveal" hidden></div>
+          </div>
+          <div class="dock" id="bug-dock"><div class="dock-row"><p class="hint">Tap a line</p><button class="btn ghost hintbtn" type="button">Hint</button></div></div>
+        </div>
+        <figcaption><b>Spot the bug.</b> Tap the guilty line. Then see why and the one-line fix, and grade yourself. Stuck? Hint gives a nudge.</figcaption>
+      </figure>
+
+      <figure class="mock">
+        <div class="phone" id="ph-pat">
+          <div class="status"><span>8:17</span><span class="notch"></span><span>5G</span></div>
+          <div class="topbar"><span class="iconbtn">✕</span><div class="pbar"><span style="width:35%"></span></div><span class="count">6/17</span></div>
+          <div class="pbody">
+            <div class="icard">
+              <div class="icard-head"><span class="kind k-pat">Algo pattern</span><span class="lc">LC #3 · Medium</span></div>
+              <div class="icard-body">
+                <p class="prompt-title">Longest substring without repeating characters</p>
+                <p>Given a string, find the length of the longest stretch of characters with no repeats.</p>
+                <p class="hint" style="text-align:left">Which patterns would you reach for? Pick all that apply.</p>
+                <div class="chips" id="pat-chips"></div>
+              </div>
+            </div>
+            <div class="reveal" id="pat-reveal" hidden></div>
+          </div>
+          <div class="dock" id="pat-dock"><div class="dock-row"><button class="btn ghost hintbtn" type="button">Hint</button><button class="btn" id="pat-check" type="button" disabled>Check</button></div></div>
+        </div>
+        <figcaption><b>Algo pattern.</b> A LeetCode problem in your own words. Pick the patterns, then get the insight, steps and complexity.</figcaption>
+      </figure>
+
+      <figure class="mock">
+        <div class="phone" id="ph-mcq">
+          <div class="status"><span>8:19</span><span class="notch"></span><span>5G</span></div>
+          <div class="topbar"><span class="iconbtn">✕</span><div class="pbar"><span style="width:53%"></span></div><span class="count">9/17</span></div>
+          <div class="pbody">
+            <div class="icard">
+              <div class="icard-head"><span class="kind k-js">JS fundamentals</span><span class="lc">arrays · control flow</span></div>
+              <div class="icard-body">
+                <p class="prompt-title">Can you stop a <code>forEach</code> early once you find a match?</p>
+                <div class="opts" id="mcq-opts"></div>
+              </div>
+            </div>
+            <div class="reveal" id="mcq-reveal" hidden></div>
+          </div>
+          <div class="dock" id="mcq-dock"><div class="dock-row"><p class="hint">Pick one</p><button class="btn ghost hintbtn" type="button">Hint</button></div></div>
+        </div>
+        <figcaption><b>Fundamentals.</b> Multiple choice or predict-the-output. The explanation always shows, right or wrong.</figcaption>
+      </figure>
+
+      <figure class="mock">
+        <div class="phone" id="ph-one">
+          <div class="status"><span>8:21</span><span class="notch"></span><span>5G</span></div>
+          <div class="topbar"><span class="iconbtn">✕</span><div class="pbar"><span style="width:70%"></span></div><span class="count">12/17</span></div>
+          <div class="pbody">
+            <div class="icard">
+              <div class="icard-head"><span class="kind k-one">One-liner</span><span class="lc">grids · DP setup</span></div>
+              <div class="icard-body">
+                <p class="prompt-title">Create an <code>m × n</code> grid filled with <code>0</code>.</p>
+                <p>One expression. You'll use this in every DP and grid problem.</p>
+              </div>
+            </div>
+            <div class="oneline">
+              <input id="one-input" type="text" value="Array(m).fill(Array(n).fill(0))" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer">
+              <div class="symbar" id="one-sym"></div>
+            </div>
+            <div class="reveal" id="one-reveal" hidden></div>
+          </div>
+          <div class="dock" id="one-dock"><div class="dock-row"><button class="btn ghost hintbtn" type="button">Hint</button><button class="btn" id="one-check" type="button">Check</button></div></div>
+        </div>
+        <figcaption><b>One-liner.</b> A symbol bar sits above the keyboard. Known answers are auto-checked, and common traps get their own message.</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">1 · Goal</span><h2>What the app is for</h2></div>
+    <div class="prose">
+      <p>Short sessions of 5 to 10 minutes, in a line or on the train. Every card tests <b>recognition and reasoning</b>, not typing. Any card can be answered with taps, or at most one short line of code.</p>
+      <p>Three rules shape everything below: answers live in the bottom third of the screen where your thumb is, the app works with no signal, and closing it mid-session loses nothing.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">2 · Content</span><h2>Four card types</h2></div>
+    <div class="types">
+      <div class="type"><span class="kind k-bug">Spot the bug</span><h3>Find the broken line</h3><p>A 5–10 line function and a symptom ("callers get <code>[]</code>"). Tap the line.</p><p class="how">Answer: tap a line → reason + one-line fix → grade</p></div>
+      <div class="type"><span class="kind k-js">JS / TS fundamentals</span><h3>Know the language</h3><p>Event loop, closures, <code>this</code>, coercion, array methods, promises, TS narrowing and generics.</p><p class="how">Answer: multiple choice, predict output, or flip card</p></div>
+      <div class="type"><span class="kind k-pat">Algo patterns</span><h3>Name the approach</h3><p>A LeetCode problem summarized in 1–2 sentences, with a link. You choose the patterns, and the card reveals the key insight, a 3-step outline, complexity and the usual gotcha.</p><p class="how">Answer: pick pattern chips → reveal → grade</p></div>
+      <div class="type"><span class="kind k-one">One-liners</span><h3>Muscle memory</h3><p>Idioms you'll type in every interview: dedupe, numeric sort, grid init, frequency map.</p><p class="how">Answer: type one line → auto-check or self-grade</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">3 · Sessions</span><h2>How studying works</h2></div>
+    <div class="two">
+      <div class="prose">
+        <p>Each card has a schedule. After answering, you tap one of two buttons, <b>Repeat</b> (retry arrow) or <b>Okay</b> (thumbs up), and the app picks when to show it next. This uses a simplified SM-2 algorithm, the same family Anki uses. You don't need to understand the math. Cards you miss come back soon, and cards you know drift out to weeks.</p>
+        <ul class="clean">
+          <li><b>Daily</b>: everything due today plus 5 new cards. Around 10 minutes.</li>
+          <li><b>Deck drill</b>: one card type, e.g. only algo patterns.</li>
+          <li><b>Weak spots</b>: the cards and patterns you miss most.</li>
+          <li><b>Cram</b>: pick tags (e.g. <i>graphs</i>, <i>promises</i>) and ignore the schedule. For the night before an interview.</li>
+        </ul>
+        <p>Repeat puts the card back into this session a few cards later, and it comes back tomorrow. Okay means you're done with it, and the next gap grows (1 day, 3 days, then longer). You can also swipe: right for Okay, left for Repeat. An OKAY or REPEAT stamp fades in as you drag, like a dating-app card.</p>
+        <p><b>Hints.</b> Every card has a Hint button next to the answer controls. One tap shows a nudge that points at the idea without naming the answer. The session summary counts hints so Weak spots can find them. Cards with no written hint get an automatic one: bug cards narrow to a 3-line region, multiple choice removes one wrong option, and pattern cards strike out half the wrong chips.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Grade</th><th>Next interval</th><th>Ease change</th></tr></thead>
+          <tbody>
+            <tr><td>Again</td><td>Re-show this session, then 1 day</td><td>−0.20</td></tr>
+            <tr><td>Hard</td><td>interval × 1.2</td><td>−0.15</td></tr>
+            <tr><td>Good</td><td>1d → 3d → interval × ease</td><td>none</td></tr>
+            <tr><td>Easy</td><td>interval × ease × 1.3</td><td>+0.15</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="callout">Ease starts at 2.5 with a floor of 1.3. The scheduler is a pure function, <code>next(state, grade, now) → state</code>, so it's easy to unit test and easy to replace with FSRS later.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">4 · Using LeetCode</span><h2>Problems as references, patterns as the lesson</h2></div>
+    <div class="prose">
+      <p>Each pattern card stores the LeetCode number, slug, difficulty and link. The prompt is a <b>1–2 sentence summary in our own words</b>, and the full statement is one tap away on leetcode.com. Problem statements are LeetCode's content, so we summarize and link instead of copying them.</p>
+      <p>The seed list follows a well-known curated set (Blind 75 / NeetCode 150) grouped by pattern, so every pattern has 3–6 problems. Some cards have more than one right answer, for example "sort first" plus "two pointers". Picking a subset counts as partial credit and the card shows what you missed.</p>
+    </div>
+    <div class="patterns">
+      <span>Hash map / set</span><span>Two pointers</span><span>Sliding window</span><span>Prefix sum</span><span>Binary search</span><span>Stack / monotonic stack</span><span>Heap / top-k</span><span>Intervals: sort + sweep</span><span>Fast &amp; slow pointers</span><span>Tree DFS / BFS</span><span>Graph BFS/DFS + visited</span><span>Topological sort</span><span>Backtracking</span><span>Dynamic programming</span><span>Greedy</span><span>Union-Find</span><span>Trie</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">5 · Data</span><h2>Card model</h2></div>
+    <div class="two">
+      <pre class="block"><span class="tc">// content/*.json, validated with zod at build time</span>
+<span class="tk">type</span> Card = Base &amp; (
+  | { kind: <span class="ts">'bug'</span>; code: string; bugLines: number[];
+      symptom: string; fix: string }
+  | { kind: <span class="ts">'mcq'</span>; code?: string; choices: string[];
+      correct: number }
+  | { kind: <span class="ts">'flip'</span> }
+  | { kind: <span class="ts">'pattern'</span>; leetcode: { id: number;
+      slug: string; difficulty: <span class="ts">'Easy'</span>|<span class="ts">'Medium'</span>|<span class="ts">'Hard'</span> };
+      patterns: Pattern[]; steps: string[];
+      complexity: { time: string; space: string } }
+  | { kind: <span class="ts">'oneliner'</span>; accept: string[];
+      traps?: { answer: string; why: string }[] }
+);
+<span class="tk">type</span> Base = { id: string; prompt: string;
+  explanation: string; tags: string[];
+  hint?: string };  <span class="tc">// optional; auto-hint if missing</span>
+
+<span class="tc">// IndexedDB, one row per card you've seen</span>
+<span class="tk">type</span> Review = { cardId: string; due: number;
+  interval: number; ease: number;
+  reps: number; lapses: number;
+  hintsUsed: number };</pre>
+      <pre class="block">study-app/
+  content/
+    bugs/  fundamentals/  patterns/  oneliners/
+  src/
+    cards/     BugCard  McqCard  FlipCard
+               PatternCard  OneLinerCard
+    srs/       schedule.ts   <span class="tc">pure, unit tested</span>
+    db/        progress.ts   <span class="tc">Dexie (IndexedDB)</span>
+    screens/   Today  Session  Summary
+               Browse  Stats  Settings
+  scripts/
+    validate-content.ts      <span class="tc">runs in CI</span>
+  vite.config.ts             <span class="tc">+ vite-plugin-pwa</span></pre>
+    </div>
+    <div class="prose">
+      <h3>Where the cards come from</h3>
+      <p>Nothing is generated when the app opens. Every card is written ahead of time as a JSON file in <code>content/</code>. At build time, Vite bundles those files into the app, the zod check rejects any malformed card, and the service worker caches the result. Opening the app on the train reads cards from that cache, with no network request.</p>
+      <p>Cards are written by hand, or drafted by Claude in a coding session and then reviewed and edited by you before they're committed. Writing them ahead of time matters for this app: a bug card is only useful if exactly one line is wrong, and an MCQ only if the distractors are plausible but wrong. Those need checking, and a card generated on the fly can't be checked.</p>
+      <p>The only thing that changes on the phone is your progress (due dates, ease, hints used), which lives in IndexedDB.</p>
+    </div>
+    <p class="callout">Adding a card means committing a JSON file. GitHub's mobile web editor works, so you can write cards from your phone too, and each push redeploys.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">6 · Stack &amp; deploy</span><h2>Static site, no backend</h2></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>App</td><td>Vite + React + TypeScript</td><td>Fast builds, and you already know the language you're studying.</td></tr>
+          <tr><td>Offline + install</td><td>vite-plugin-pwa</td><td>Service worker and manifest. Add to Home Screen and it opens like a native app, even in the subway.</td></tr>
+          <tr><td>Progress</td><td>IndexedDB via Dexie</td><td>Local, no accounts. JSON export/import in Settings as a backup.</td></tr>
+          <tr><td>Code display</td><td>Small built-in highlighter</td><td>Snippets are under 10 lines, so a tiny tokenizer is enough. Shiki stays an option if it ever isn't.</td></tr>
+          <tr><td>Content checks</td><td>zod schema + CI</td><td>A malformed card fails the build instead of breaking a session.</td></tr>
+          <tr><td>Hosting</td><td>Vercel (or Cloudflare Pages)</td><td>Free tier, HTTPS (a PWA requires it), auto-deploy on every push to GitHub.</td></tr>
+          <tr><td>Sync (later)</td><td>Supabase, only if needed</td><td>Only worth adding if you study on more than one device.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="callout">iOS note: Safari can clear data for sites you haven't visited in about 7 days. Apps added to the Home Screen are exempt, so install it and keep the export button for peace of mind.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">7 · Plan</span><h2>Roadmap</h2></div>
+    <div>
+      <div class="phase"><span class="when">v1 · built</span><p><b>Usable MVP.</b> The four card types plus flip cards, hints, Daily session, Deck drill, Weak spots, Cram by tag, scheduler, session summary, basic stats, export/import, 68 seed cards, PWA install. Next step: deploy on Vercel.</p></div>
+      <div class="phase"><span class="when">v1.1</span><p><b>Study smarter.</b> Richer stats by pattern and tag, bookmarks, deck grows to ~150 cards.</p></div>
+      <div class="phase"><span class="when">v2</span><p><b>Card drafting with Claude Code.</b> No generate button in the app. Ask Claude Code, on your computer or at claude.ai/code from your phone, to draft cards ("6 sliding-window pattern cards with hints"). It writes the JSON, runs the checks and opens a pull request. You review and merge, and the site redeploys. This uses your Claude subscription, so no API key and no backend. Optionally, a scheduled weekly task drafts cards for your weak patterns. Cross-device sync only if needed.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="eyebrow">8 · Sample deck</span><h2>Sample questions</h2><p class="lede" style="font-size:1rem">These are drafts of the seed content. Each one is written to be answered on a phone.</p></div>
+    <div class="filters" id="filters"></div>
+    <div class="samples" id="samples"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const TOK = /(\/\/.*$)|('[^']*'|"[^"]*")|\b(const|let|var|function|return|if|else|while|for|async|await|new|class|of|this|typeof)\b|\b(\d+)\b/g;
+  function hl(line) {
+    let out = '', last = 0, m; TOK.lastIndex = 0;
+    while ((m = TOK.exec(line))) {
+      const cls = m[1] ? 'tc' : m[2] ? 'ts' : m[3] ? 'tk' : 'tn';
+      out += esc(line.slice(last, m.index)) + '<span class="' + cls + '">' + esc(m[0]) + '</span>';
+      last = TOK.lastIndex;
+    }
+    return out + esc(line.slice(last));
+  }
+  function codeBlock(src, interactive) {
+    return src.split('\n').map((l, i) =>
+      (interactive ? '<button type="button" class="ln" data-i="' + i + '">' : '<div class="ln">') +
+      '<span class="no">' + (i + 1) + '</span><span>' + (hl(l) || ' ') + '</span>' + (interactive ? '</button>' : '</div>')).join('');
+  }
+  const GRADES = [['Again', '<1m', 'again'], ['Hard', '2d', ''], ['Good', '4d', 'good'], ['Easy', '9d', '']];
+  function grades(dock, phone) {
+    const hinted = phone.dataset.hinted === '1';
+    dock.innerHTML = '<div class="grades">' + GRADES.map(g => {
+      const capped = hinted && g[0] === 'Easy';
+      return '<button type="button" class="grade ' + g[2] + '" data-g="' + g[0] + '" data-n="' + g[1] + '"' + (capped ? ' disabled title="Not available after a hint"' : '') + '>' + g[0] + '<small>' + (capped ? 'hint used' : g[1]) + '</small></button>';
+    }).join('') + '</div>';
+    dock.querySelectorAll('.grade').forEach(b => b.addEventListener('click', () => {
+      const old = phone.querySelector('.toast'); if (old) old.remove();
+      const t = document.createElement('div'); t.className = 'toast';
+      t.textContent = b.dataset.g === 'Again' ? 'Shown again later this session' : 'Next review in ' + b.dataset.n.replace('d', ' days');
+      phone.appendChild(t); setTimeout(() => t.remove(), 1800);
+    }));
+  }
+
+  function hintBtn(phone, text) {
+    const b = phone.querySelector('.hintbtn');
+    b.addEventListener('click', () => {
+      const box = document.createElement('p'); box.className = 'hintbox';
+      box.innerHTML = '<b>Hint</b><span>' + text + '</span>';
+      phone.querySelector('.icard-body').appendChild(box);
+      phone.dataset.hinted = '1'; b.disabled = true; b.textContent = 'Hint used';
+      box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }
+
+  /* ---------- sample deck data ---------- */
+  const DECK = [
+    { hint: 'Which line starts async work that nothing waits for?', kind: 'bug', title: 'Users come back empty', prompt: 'Should return every user. Callers always get <code>[]</code>.',
+      code: "async function loadAll(ids) {\n  const results = [];\n  ids.forEach(async (id) => {\n    const user = await fetchUser(id);\n    results.push(user);\n  });\n  return results;\n}",
+      bugLines: [2, 6],
+      answer: '<b>Line 3.</b> <code>forEach</code> ignores the promises its callback returns, so <code>loadAll</code> returns before any fetch finishes.<br>Fix: <code>return Promise.all(ids.map(fetchUser));</code>' },
+    { hint: 'What does <code>sort()</code> compare by when you pass no function?', kind: 'bug', title: 'Median of [10, 9, 2] is 2', prompt: 'Should return 9. Returns 2.',
+      code: "function median(nums) {\n  const sorted = nums.sort();\n  const mid = Math.floor(sorted.length / 2);\n  return sorted.length % 2\n    ? sorted[mid]\n    : (sorted[mid - 1] + sorted[mid]) / 2;\n}",
+      answer: '<b>Line 2.</b> Default <code>sort()</code> compares as strings, so <code>[10, 9, 2]</code> becomes <code>[10, 2, 9]</code>. It also mutates the caller\'s array.<br>Fix: <code>[...nums].sort((a, b) =&gt; a - b)</code>' },
+    { hint: 'Trace it with a single element. Does the loop body run at all?', kind: 'bug', title: 'Binary search misses a match', prompt: '<code>search([5], 5)</code> returns <code>-1</code>.',
+      code: "function search(nums, target) {\n  let lo = 0, hi = nums.length - 1;\n  while (lo < hi) {\n    const mid = Math.floor((lo + hi) / 2);\n    if (nums[mid] === target) return mid;\n    if (nums[mid] < target) lo = mid + 1;\n    else hi = mid - 1;\n  }\n  return -1;\n}",
+      answer: '<b>Line 3.</b> <code>hi</code> is an inclusive bound, so when <code>lo === hi</code> one candidate is still unchecked.<br>Fix: <code>while (lo &lt;= hi)</code>' },
+    { hint: 'What is <code>sum</code> on the very first call?', kind: 'bug', title: 'Cart total is "[object Object]25"', prompt: 'With two carts, the total is a string.',
+      code: "const total = carts.reduce(\n  (sum, c) => sum + c.price\n);",
+      answer: '<b>Line 3.</b> With no initial value, the first <code>sum</code> is the first cart <i>object</i>, and object + number concatenates. An empty array throws a TypeError.<br>Fix: pass <code>0</code> as the second argument: <code>reduce((sum, c) =&gt; sum + c.price, 0)</code>' },
+
+    { hint: 'A <code>forEach</code> callback is its own function. What does <code>return</code> exit?', kind: 'js', title: 'Early return from forEach', prompt: 'Can you stop a <code>forEach</code> early once you find a match?',
+      choices: ['Yes, <code>return</code> exits the loop', 'Yes, use <code>break</code>', 'No. Use <code>for...of</code>, <code>some()</code> or <code>find()</code>', 'Only inside an async function'], correct: 2,
+      answer: '<code>return</code> only ends the current callback; the loop keeps going. <code>break</code> inside a callback is a SyntaxError. Use <code>for...of</code> with <code>break</code>, or <code>some()</code>/<code>find()</code>, which stop at the first truthy result.' },
+    { hint: '<code>map</code> passes more than one argument to its callback.', kind: 'js', title: 'map(parseInt)', prompt: 'What does this return?', code: "['1', '2', '3'].map(parseInt)",
+      choices: ['<code>[1, 2, 3]</code>', '<code>[1, NaN, NaN]</code>', '<code>[NaN, NaN, NaN]</code>', 'TypeError'], correct: 1,
+      answer: '<code>map</code> passes <code>(value, index)</code>, so this calls <code>parseInt(\'2\', 1)</code> and <code>parseInt(\'3\', 2)</code>. Radix 1 is invalid and 3 is not a binary digit. Radix 0 means "default", so the first one works. Fix: <code>.map(Number)</code>.' },
+    { hint: 'Promise callbacks and timers wait in different queues. Which one drains first?', kind: 'js', title: 'Event loop order', prompt: 'What prints, in order?',
+      code: "console.log('A');\nsetTimeout(() => console.log('B'), 0);\nPromise.resolve().then(() => console.log('C'));\nconsole.log('D');",
+      choices: ['A B C D', 'A D B C', 'A D C B', 'A C D B'], correct: 2,
+      answer: 'Synchronous code runs first (A, D). Then the microtask queue drains (C, the promise callback) before the next macrotask (B, the timer).' },
+    { hint: 'How many levels deep does spread copy?', kind: 'js', title: 'Spread is shallow', prompt: 'What prints?',
+      code: "const a = { user: { name: 'Ana' } };\nconst b = { ...a };\nb.user.name = 'Bo';\nconsole.log(a.user.name);",
+      choices: ["<code>'Ana'</code>", "<code>'Bo'</code>", '<code>undefined</code>', 'TypeError'], correct: 1,
+      answer: 'Spread copies one level. <code>a.user</code> and <code>b.user</code> are the same object. For a deep copy use <code>structuredClone(a)</code>.' },
+    { hint: 'Does <code>Promise.all</code> keep waiting once one input fails?', kind: 'js', title: 'Promise.all with one failure', prompt: 'Three requests in <code>Promise.all</code>. The 2nd rejects after 50ms; the others take 1s. What happens?',
+      choices: ['Waits 1s, then rejects', 'Rejects at ~50ms with the 2nd error', 'Resolves with an <code>undefined</code> slot', 'Resolves with the two successes'], correct: 1,
+      answer: '<code>Promise.all</code> rejects as soon as any input rejects. The other requests keep running but their results are dropped. Use <code>Promise.allSettled</code> to get every outcome.' },
+    { hint: 'Which of the two lets you write <code>data.foo.bar</code> with no checks at all?', kind: 'js', title: 'TS: unknown vs any', prompt: 'You parse JSON from an API. Why type it <code>unknown</code> instead of <code>any</code>? <i>(flip card)</i>',
+      answer: '<code>any</code> switches type checking off, so anything compiles. <code>unknown</code> forces you to narrow first (a <code>typeof</code> check, a type guard, or a zod parse), so bad API data fails at the boundary instead of deep inside your code.' },
+
+    { hint: 'Longest contiguous stretch that obeys a rule? Grow the right edge, shrink the left when the rule breaks.', kind: 'pat', title: 'Longest substring without repeating characters', lc: [3, 'longest-substring-without-repeating-characters', 'Medium'],
+      prompt: 'Given a string, find the length of the longest stretch of characters with no repeats.', pats: ['Sliding window', 'Hash map / set'],
+      answer: 'Grow the window to the right. Store each char\'s last index in a map. On a repeat inside the window, jump <code>left</code> to <code>lastIndex + 1</code>. Track the max width.<br><b>O(n)</b> time · O(alphabet) space' },
+    { hint: 'Fix one number. The other two must sum to its negative. In a sorted array, how do you find a pair with a given sum?', kind: 'pat', title: '3Sum', lc: [15, '3sum', 'Medium'],
+      prompt: 'Find all unique triplets in an array that add up to zero.', pats: ['Sort first', 'Two pointers'],
+      answer: 'Sort. For each <code>i</code>, run two pointers on the rest looking for <code>-nums[i]</code>. Skip equal neighbors for <code>i</code>, left and right to avoid duplicate triplets.<br><b>O(n²)</b> time · O(1) extra space' },
+    { hint: 'An island is a connected group of cells. How do you visit a whole group exactly once?', kind: 'pat', title: 'Number of islands', lc: [200, 'number-of-islands', 'Medium'],
+      prompt: 'A grid of land and water. Count the islands, where land connects up/down/left/right.', pats: ['Graph BFS/DFS', 'Visited set'],
+      answer: 'Scan every cell. On unvisited land, count one island and flood-fill it (DFS or BFS), marking cells visited or sinking them to water.<br><b>O(m·n)</b> time · O(m·n) worst-case stack/queue' },
+    { hint: 'Overlaps are easy to spot when they sit next to each other. What order makes that true?', kind: 'pat', title: 'Merge intervals', lc: [56, 'merge-intervals', 'Medium'],
+      prompt: 'Given a list of intervals, merge every pair that overlaps.', pats: ['Sort first', 'Intervals sweep'],
+      answer: 'Sort by start. Walk once: if the next start ≤ current end, extend <code>end = max(end, next.end)</code>; otherwise start a new interval.<br><b>O(n log n)</b> time' },
+    { hint: 'Each day waits for the next warmer one. Keep the unresolved days somewhere you can pop from the top.', kind: 'pat', title: 'Daily temperatures', lc: [739, 'daily-temperatures', 'Medium'],
+      prompt: 'For each day\'s temperature, how many days until a warmer one?', pats: ['Monotonic stack'],
+      answer: 'Keep a stack of indices with decreasing temperatures. For each new day, pop every colder day and record the gap. Each index is pushed and popped once.<br><b>O(n)</b> time · O(n) space' },
+    { hint: 'Prerequisites form a directed graph. You can finish everything only if it has no ...?', kind: 'pat', title: 'Course schedule', lc: [207, 'course-schedule', 'Medium'],
+      prompt: 'Courses have prerequisites. Can you finish all of them?', pats: ['Graph', 'Topological sort'],
+      answer: 'Build an adjacency list and in-degree counts. Queue every course with in-degree 0; pop, and decrement its neighbors (Kahn\'s algorithm). If you processed every course, there is no cycle.<br><b>O(V + E)</b>' },
+
+    { hint: 'Which built-in collection rejects duplicates and remembers insertion order?', kind: 'one', title: 'Dedupe, keep order', prompt: 'Remove duplicates from <code>arr</code>, keeping first-seen order.',
+      answer: '<code>[...new Set(arr)]</code> or <code>Array.from(new Set(arr))</code>. A <code>Set</code> keeps insertion order.' },
+    { hint: 'Copy first, then sort with a comparator. ES2023 also has a non-mutating sort.', kind: 'one', title: 'Numeric sort, no mutation', prompt: 'Get a sorted copy of <code>nums</code>, ascending, without changing <code>nums</code>.',
+      answer: '<code>[...nums].sort((a, b) =&gt; a - b)</code> or <code>nums.toSorted((a, b) =&gt; a - b)</code> (ES2023).' },
+    { hint: 'Every row has to be a <i>different</i> array. What does <code>fill</code> put in each slot?', kind: 'one', title: 'm × n grid of zeros', prompt: 'Create an <code>m × n</code> grid filled with <code>0</code>.',
+      answer: '<code>Array.from({ length: m }, () =&gt; Array(n).fill(0))</code><br>Trap: <code>Array(m).fill(Array(n).fill(0))</code> puts the <i>same</i> row object in every slot, so writing one cell changes the whole column.' }
+  ];
+  const KIND = { bug: ['Spot the bug', 'k-bug'], js: ['JS / TS', 'k-js'], pat: ['Algo pattern', 'k-pat'], one: ['One-liner', 'k-one'] };
+
+  /* ---------- bug mock ---------- */
+  (function () {
+    const card = DECK[0], phone = document.getElementById('ph-bug');
+    hintBtn(phone, card.hint);
+    const box = document.getElementById('bug-code'), rev = document.getElementById('bug-reveal'), dock = document.getElementById('bug-dock');
+    box.innerHTML = codeBlock(card.code, true);
+    let done = false;
+    box.querySelectorAll('.ln').forEach(b => b.addEventListener('click', () => {
+      if (done) return; done = true;
+      const i = +b.dataset.i, ok = card.bugLines.includes(i);
+      box.querySelector('.ln[data-i="2"]').classList.add('hit');
+      if (!ok) b.classList.add('miss');
+      rev.className = 'reveal ' + (ok ? 'good' : 'bad');
+      rev.innerHTML = '<span class="verdict">' + (ok ? (i === 2 ? 'Got it' : 'Close: that\'s the symptom') : 'Not that one') + '</span><p>' + card.answer + '</p>';
+      rev.hidden = false; grades(dock, phone);
+      rev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }));
+  })();
+
+  /* ---------- pattern mock ---------- */
+  (function () {
+    const card = DECK[10], phone = document.getElementById('ph-pat');
+    hintBtn(phone, card.hint);
+    const OPTS = ['Hash map / set', 'Two pointers', 'Sliding window', 'Sort first', 'Stack', 'BFS / DFS', 'Binary search', 'Heap', 'DP'];
+    const chips = document.getElementById('pat-chips'), check = document.getElementById('pat-check');
+    const rev = document.getElementById('pat-reveal'), dock = document.getElementById('pat-dock');
+    chips.innerHTML = OPTS.map(o => '<button type="button" class="chip" aria-pressed="false">' + o + '</button>').join('');
+    const all = [...chips.querySelectorAll('.chip')];
+    all.forEach(c => c.addEventListener('click', () => {
+      c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      check.disabled = !all.some(x => x.getAttribute('aria-pressed') === 'true');
+    }));
+    check.addEventListener('click', () => {
+      let hits = 0, wrong = 0;
+      all.forEach(c => {
+        const on = c.getAttribute('aria-pressed') === 'true', right = card.pats.includes(c.textContent);
+        c.disabled = true; c.removeAttribute('aria-pressed');
+        if (on && right) { c.classList.add('c-ok'); hits++; }
+        else if (right) c.classList.add('c-missed');
+        else if (on) { c.classList.add('c-bad'); wrong++; }
+      });
+      const full = hits === card.pats.length && !wrong;
+      rev.className = 'reveal ' + (full ? 'good' : hits ? '' : 'bad');
+      rev.innerHTML = '<span class="verdict">' + (full ? 'Spot on' : hits ? 'Partly right' : 'Not quite') + '</span><p>' + card.answer + '</p>' +
+        '<div class="meta-row"><span class="pill">Gotcha: only move left forward</span></div>' +
+        '<a href="https://leetcode.com/problems/' + card.lc[1] + '/" target="_blank" rel="noopener">Open on LeetCode ↗</a>';
+      rev.hidden = false; grades(dock, phone);
+      rev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  })();
+
+  /* ---------- mcq mock ---------- */
+  (function () {
+    const card = DECK[4], phone = document.getElementById('ph-mcq');
+    hintBtn(phone, card.hint);
+    const box = document.getElementById('mcq-opts'), rev = document.getElementById('mcq-reveal'), dock = document.getElementById('mcq-dock');
+    box.innerHTML = card.choices.map((c, i) => '<button type="button" class="opt" data-i="' + i + '"><span class="letter">' + 'ABCD'[i] + '</span><span>' + c + '</span></button>').join('');
+    const opts = [...box.querySelectorAll('.opt')];
+    opts.forEach(o => o.addEventListener('click', () => {
+      const i = +o.dataset.i, ok = i === card.correct;
+      opts.forEach(x => x.disabled = true);
+      opts[card.correct].classList.add('o-ok'); if (!ok) o.classList.add('o-bad');
+      rev.className = 'reveal ' + (ok ? 'good' : 'bad');
+      rev.innerHTML = '<span class="verdict">' + (ok ? 'Correct' : 'Nope') + '</span><p>' + card.answer + '</p>';
+      rev.hidden = false; grades(dock, phone);
+      rev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }));
+  })();
+
+  /* ---------- one-liner mock ---------- */
+  (function () {
+    const phone = document.getElementById('ph-one'), input = document.getElementById('one-input');
+    hintBtn(phone, DECK[18].hint);
+    const sym = document.getElementById('one-sym'), rev = document.getElementById('one-reveal'), dock = document.getElementById('one-dock');
+    const SYMS = ['(', ')', '[', ']', '{', '}', '=>', '.'];
+    sym.innerHTML = SYMS.map(s => '<button type="button" class="sym">' + esc(s) + '</button>').join('');
+    sym.querySelectorAll('.sym').forEach(b => b.addEventListener('click', () => {
+      const s = b.textContent, st = input.selectionStart ?? input.value.length, en = input.selectionEnd ?? st;
+      input.value = input.value.slice(0, st) + s + input.value.slice(en);
+      input.focus(); input.setSelectionRange(st + s.length, st + s.length);
+    }));
+    const norm = s => s.replace(/\s+/g, '').replace(/'/g, '"').replace(/;$/, '').replace(/newArray/g, 'Array');
+    const ACCEPT = ['Array.from({length:m},()=>Array(n).fill(0))', 'Array.from(Array(m),()=>Array(n).fill(0))', '[...Array(m)].map(()=>Array(n).fill(0))',
+      'Array(m).fill(0).map(()=>Array(n).fill(0))', 'Array.from({length:m},()=>Array.from({length:n},()=>0))', 'Array.from({length:m},()=>newArray(n).fill(0))'].map(norm);
+    const TRAP = norm('Array(m).fill(Array(n).fill(0))');
+    function run() {
+      const v = norm(input.value);
+      let cls, verdict, body;
+      if (ACCEPT.includes(v)) { cls = 'good'; verdict = 'Correct'; body = 'Each row is a fresh array, so rows don\'t share memory.'; }
+      else if (v === TRAP) { cls = 'bad'; verdict = 'Classic trap'; body = '<code>fill</code> puts the <i>same</i> row object in every slot. <code>grid[0][0] = 1</code> changes every row.'; }
+      else { cls = ''; verdict = 'No exact match'; body = 'Compare with the answer below and grade yourself honestly.'; }
+      rev.className = 'reveal ' + cls;
+      rev.innerHTML = '<span class="verdict">' + verdict + '</span><p>' + body + '</p><p><code>Array.from({ length: m }, () =&gt; Array(n).fill(0))</code></p>';
+      rev.hidden = false; grades(dock, phone);
+      rev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    document.getElementById('one-check').addEventListener('click', run);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('one-check')) run(); });
+  })();
+
+  /* ---------- sample deck ---------- */
+  const filters = document.getElementById('filters'), grid = document.getElementById('samples');
+  const F = [['all', 'All']].concat(Object.entries(KIND).map(([k, v]) => [k, v[0]]));
+  filters.innerHTML = F.map(([k, l]) => {
+    const n = k === 'all' ? DECK.length : DECK.filter(c => c.kind === k).length;
+    return '<button type="button" class="fchip" data-k="' + k + '" aria-pressed="' + (k === 'all') + '">' + l + ' · ' + n + '</button>';
+  }).join('');
+  function render(k) {
+    grid.innerHTML = DECK.filter(c => k === 'all' || c.kind === k).map(c => {
+      const kd = KIND[c.kind];
+      const right = c.lc ? '<a class="lc" href="https://leetcode.com/problems/' + c.lc[1] + '/" target="_blank" rel="noopener">LC #' + c.lc[0] + ' · ' + c.lc[2] + ' ↗</a>' : '';
+      let mid = '';
+      if (c.code) mid += '<div class="code static">' + codeBlock(c.code, false) + '</div>';
+      if (c.choices) mid += '<ol type="A">' + c.choices.map(x => '<li>' + x + '</li>').join('') + '</ol>';
+      if (c.pats) mid += '<p class="hint" style="text-align:left">Which patterns?</p>';
+      const extra = c.pats ? '<div class="meta-row">' + c.pats.map(p => '<span class="pill">' + p + '</span>').join('') + '</div>' : '';
+      const lead = c.choices ? '<p><b>' + 'ABCD'[c.correct] + '.</b></p>' : '';
+      return '<article class="icard sample"><div class="icard-head"><span class="kind ' + kd[1] + '">' + kd[0] + '</span>' + right + '</div>' +
+        '<div class="icard-body"><p class="prompt-title">' + esc(c.title) + '</p><p>' + c.prompt + '</p>' + mid +
+        (c.hint ? '<details class="hintd"><summary>Hint</summary><p class="hintbox"><span>' + c.hint + '</span></p></details>' : '') +
+        '<details><summary>Answer</summary><div class="ans">' + lead + extra + '<p>' + c.answer + '</p></div></details></div></article>';
+    }).join('');
+  }
+  filters.querySelectorAll('.fchip').forEach(b => b.addEventListener('click', () => {
+    filters.querySelectorAll('.fchip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render(b.dataset.k);
+  }));
+  render('all');
+})();
+</script>

@@ -1,0 +1,150 @@
+[
+  {
+    "id": "one-dedupe",
+    "kind": "oneliner",
+    "title": "Dedupe, keep order",
+    "prompt": "Remove duplicates from <code>arr</code>, keeping first-seen order.",
+    "accept": ["[...new Set(arr)]", "Array.from(new Set(arr))"],
+    "explanation": "A <code>Set</code> drops duplicates and keeps insertion order. Spread it back into an array.",
+    "hint": "Which built-in collection rejects duplicates and remembers insertion order?",
+    "tags": ["arrays", "set"]
+  },
+  {
+    "id": "one-numeric-sort-copy",
+    "kind": "oneliner",
+    "title": "Numeric sort, no mutation",
+    "prompt": "Get a sorted copy of <code>nums</code>, ascending, without changing <code>nums</code>.",
+    "accept": ["[...nums].sort((a, b) => a - b)", "nums.toSorted((a, b) => a - b)", "nums.slice().sort((a, b) => a - b)"],
+    "traps": [
+      { "answer": "nums.sort((a, b) => a - b)", "why": "Sorts correctly, but <code>sort</code> works in place, so <code>nums</code> changes too." },
+      { "answer": "[...nums].sort()", "why": "No comparator means string order: <code>[10, 9]</code> stays <code>[10, 9]</code>." }
+    ],
+    "explanation": "Copy first, then sort with a numeric comparator. ES2023's <code>toSorted</code> does both.",
+    "hint": "Copy first, then sort with a comparator. ES2023 also has a non-mutating sort.",
+    "tags": ["arrays", "sorting"]
+  },
+  {
+    "id": "one-grid-zeros",
+    "kind": "oneliner",
+    "title": "m × n grid of zeros",
+    "prompt": "Create an <code>m × n</code> grid filled with <code>0</code>.",
+    "accept": [
+      "Array.from({ length: m }, () => Array(n).fill(0))",
+      "Array.from({ length: m }, () => new Array(n).fill(0))",
+      "Array.from(Array(m), () => Array(n).fill(0))",
+      "[...Array(m)].map(() => Array(n).fill(0))",
+      "Array(m).fill(0).map(() => Array(n).fill(0))",
+      "Array.from({ length: m }, () => Array.from({ length: n }, () => 0))"
+    ],
+    "traps": [
+      { "answer": "Array(m).fill(Array(n).fill(0))", "why": "<code>fill</code> puts the <i>same</i> row object in every slot. <code>grid[0][0] = 1</code> changes every row." },
+      { "answer": "Array(m).map(() => Array(n).fill(0))", "why": "<code>Array(m)</code> is all holes, and <code>map</code> skips holes, so you get an empty sparse array." }
+    ],
+    "explanation": "Each row has to be a separate array, so build rows with a factory function.",
+    "hint": "Every row has to be a <i>different</i> array. What does <code>fill</code> put in each slot?",
+    "tags": ["arrays", "grids", "dp"]
+  },
+  {
+    "id": "one-frequency-map",
+    "kind": "oneliner",
+    "title": "Frequency map",
+    "prompt": "Count how often each value in <code>arr</code> appears, as a <code>Map</code>.",
+    "accept": [
+      "arr.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map())",
+      "arr.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map())"
+    ],
+    "explanation": "<code>Map.set</code> returns the map, so it chains nicely inside <code>reduce</code>. A <code>for...of</code> loop is just as good in an interview.",
+    "hint": "<code>reduce</code> into a <code>new Map()</code>. What does <code>map.set</code> return?",
+    "tags": ["hash map", "arrays"]
+  },
+  {
+    "id": "one-sum",
+    "kind": "oneliner",
+    "title": "Sum an array",
+    "prompt": "Sum the numbers in <code>nums</code>. It must also work when <code>nums</code> is empty.",
+    "accept": ["nums.reduce((a, b) => a + b, 0)", "nums.reduce((sum, x) => sum + x, 0)"],
+    "traps": [{ "answer": "nums.reduce((a, b) => a + b)", "why": "Without the initial <code>0</code>, an empty array throws a TypeError." }],
+    "explanation": "Always pass the initial value. It also fixes the type of the accumulator.",
+    "hint": "What does <code>reduce</code> do with an empty array and no starting value?",
+    "tags": ["arrays"]
+  },
+  {
+    "id": "one-last-element",
+    "kind": "oneliner",
+    "title": "Last element",
+    "prompt": "Get the last element of <code>arr</code>.",
+    "accept": ["arr.at(-1)", "arr[arr.length - 1]"],
+    "traps": [{ "answer": "arr[-1]", "why": "That reads a property named <code>\"-1\"</code>, which is <code>undefined</code>. Negative indexes only work with <code>.at()</code>." }],
+    "explanation": "<code>at()</code> accepts negative indexes. Handy for stacks: <code>stack.at(-1)</code> is peek.",
+    "hint": "There's an array method that accepts negative indexes.",
+    "tags": ["arrays"]
+  },
+  {
+    "id": "one-range",
+    "kind": "oneliner",
+    "title": "Range 0..n-1",
+    "prompt": "Make the array <code>[0, 1, …, n - 1]</code>.",
+    "accept": ["Array.from({ length: n }, (_, i) => i)", "[...Array(n).keys()]", "Array.from(Array(n).keys())"],
+    "traps": [{ "answer": "Array(n).map((_, i) => i)", "why": "<code>Array(n)</code> has holes, and <code>map</code> skips holes, so nothing is filled in." }],
+    "explanation": "<code>Array.from</code> passes <code>(value, index)</code> to its mapper, even for slots that don't exist yet.",
+    "hint": "<code>Array.from</code> takes a length and a mapper that receives the index.",
+    "tags": ["arrays"]
+  },
+  {
+    "id": "one-max",
+    "kind": "oneliner",
+    "title": "Max of an array",
+    "prompt": "Get the largest number in <code>nums</code>.",
+    "accept": ["Math.max(...nums)"],
+    "traps": [{ "answer": "Math.max(nums)", "why": "<code>Math.max</code> takes separate arguments. Given an array, it converts it to a number and returns <code>NaN</code>." }],
+    "explanation": "Spread the array into arguments. For very large arrays (100k+ items), use <code>reduce</code> instead to avoid argument limits.",
+    "hint": "<code>Math.max</code> wants separate arguments, not one array.",
+    "tags": ["arrays", "numbers"]
+  },
+  {
+    "id": "one-reverse-string",
+    "kind": "oneliner",
+    "title": "Reverse a string",
+    "prompt": "Reverse the string <code>s</code>.",
+    "accept": ["[...s].reverse().join('')", "s.split('').reverse().join('')", "Array.from(s).reverse().join('')"],
+    "traps": [{ "answer": "s.reverse()", "why": "Strings are immutable and have no <code>reverse</code> method. Go through an array." }],
+    "explanation": "String → array → reverse → join. <code>[...s]</code> also keeps emoji intact, which <code>split('')</code> doesn't.",
+    "hint": "Strings can't be reversed directly. Which type can?",
+    "tags": ["strings"]
+  },
+  {
+    "id": "one-swap",
+    "kind": "oneliner",
+    "title": "Swap two elements",
+    "prompt": "Swap <code>a[i]</code> and <code>a[j]</code> without a temp variable.",
+    "accept": ["[a[i], a[j]] = [a[j], a[i]]"],
+    "explanation": "Destructuring assignment builds the right-hand array first, then assigns. If the previous line has no semicolon, a line starting with <code>[</code> can join onto it.",
+    "hint": "Destructuring works on the left side of <code>=</code> too.",
+    "tags": ["arrays", "destructuring"]
+  },
+  {
+    "id": "one-letter-index",
+    "kind": "oneliner",
+    "title": "Letter to index",
+    "prompt": "Turn a lowercase letter <code>ch</code> into 0–25 (a → 0, z → 25).",
+    "accept": ["ch.charCodeAt(0) - 97", "ch.charCodeAt() - 97", "ch.charCodeAt(0) - 'a'.charCodeAt(0)", "ch.codePointAt(0) - 97"],
+    "traps": [{ "answer": "ch - 'a'", "why": "That works in C or Java, but in JS subtracting strings converts them to numbers: <code>NaN</code>." }],
+    "explanation": "Character codes for a–z are 97–122. Useful for 26-slot count arrays in anagram problems.",
+    "hint": "What's the character code of <code>'a'</code>?",
+    "tags": ["strings"]
+  },
+  {
+    "id": "one-deep-copy",
+    "kind": "oneliner",
+    "title": "Deep copy",
+    "prompt": "Make a deep copy of <code>obj</code> (nested objects, Dates and Maps included).",
+    "accept": ["structuredClone(obj)"],
+    "traps": [
+      { "answer": "{ ...obj }", "why": "Spread is shallow: nested objects are still shared." },
+      { "answer": "JSON.parse(JSON.stringify(obj))", "why": "Works for plain data, but Dates become strings, Maps become <code>{}</code>, and <code>undefined</code> values disappear." }
+    ],
+    "explanation": "<code>structuredClone</code> is built into browsers and Node 17+, and handles Dates, Maps, Sets and cycles.",
+    "hint": "There's a built-in global function for exactly this.",
+    "tags": ["objects", "references"]
+  }
+]

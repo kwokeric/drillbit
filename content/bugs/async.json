@@ -1,0 +1,66 @@
+[
+  {
+    "id": "bug-foreach-async",
+    "kind": "bug",
+    "title": "Users come back empty",
+    "prompt": "Should return every user. Callers always get <code>[]</code>.",
+    "code": "async function loadAll(ids) {\n  const results = [];\n  ids.forEach(async (id) => {\n    const user = await fetchUser(id);\n    results.push(user);\n  });\n  return results;\n}",
+    "bugLines": [3],
+    "symptomLines": [7],
+    "fix": "return Promise.all(ids.map(fetchUser));",
+    "explanation": "<code>forEach</code> ignores the promises its callback returns, so <code>loadAll</code> returns before any fetch finishes. Map to promises and await them together.",
+    "hint": "Which line starts async work that nothing waits for?",
+    "tags": ["async", "arrays"]
+  },
+  {
+    "id": "bug-return-without-await",
+    "kind": "bug",
+    "title": "The catch never runs",
+    "prompt": "When the request fails, <code>logError</code> never runs and the caller gets a rejected promise.",
+    "code": "async function save(data) {\n  try {\n    return api.post('/save', data);\n  } catch (err) {\n    logError(err);\n    return null;\n  }\n}",
+    "bugLines": [3],
+    "symptomLines": [5],
+    "fix": "return await api.post('/save', data);",
+    "explanation": "Returning a promise without <code>await</code> leaves the <code>try</code> block straight away. The rejection happens later, outside the <code>try</code>, so the <code>catch</code> never sees it. Inside <code>try</code>, write <code>return await</code>.",
+    "hint": "When does the request actually fail, compared to when the function leaves the try block?",
+    "tags": ["async", "errors"]
+  },
+  {
+    "id": "bug-async-filter",
+    "kind": "bug",
+    "title": "Inactive users get through",
+    "prompt": "Should keep only active users. Returns every user.",
+    "code": "async function activeUsers(users) {\n  return users.filter(async (u) => {\n    const status = await getStatus(u.id);\n    return status === 'active';\n  });\n}",
+    "bugLines": [2],
+    "fix": "const statuses = await Promise.all(users.map((u) => getStatus(u.id)));\nreturn users.filter((_, i) => statuses[i] === 'active');",
+    "explanation": "An <code>async</code> callback always returns a Promise, and a Promise is truthy, so <code>filter</code> keeps everything. Fetch all the statuses first, then filter synchronously.",
+    "hint": "What does an async function return, and is that value truthy?",
+    "tags": ["async", "arrays"]
+  },
+  {
+    "id": "bug-this-in-callback",
+    "kind": "bug",
+    "title": "The counter never moves",
+    "prompt": "After <code>counter.start()</code>, <code>counter.count</code> stays 0 forever.",
+    "code": "class Counter {\n  count = 0;\n  start() {\n    setInterval(function () {\n      this.count++;\n    }, 1000);\n  }\n}",
+    "bugLines": [4],
+    "symptomLines": [5],
+    "fix": "setInterval(() => {",
+    "explanation": "A regular <code>function</code> gets its own <code>this</code> from how it's called, and the timer doesn't call it on your object. An arrow function has no <code>this</code> of its own, so it uses the one from <code>start()</code>.",
+    "hint": "Inside that callback, who decides what <code>this</code> is?",
+    "tags": ["this", "closures"]
+  },
+  {
+    "id": "bug-var-in-loop",
+    "kind": "bug",
+    "title": "Every timer reads past the end",
+    "prompt": "Throws <code>TypeError: Cannot read properties of undefined (reading 'name')</code>.",
+    "code": "function scheduleAll(tasks) {\n  for (var i = 0; i < tasks.length; i++) {\n    setTimeout(() => {\n      console.log('running', tasks[i].name);\n    }, i * 100);\n  }\n}",
+    "bugLines": [2],
+    "symptomLines": [4],
+    "fix": "for (let i = 0; i < tasks.length; i++) {",
+    "explanation": "<code>var</code> is function-scoped, so every callback shares one <code>i</code>. By the time the timers fire, the loop has finished and <code>i === tasks.length</code>. <code>let</code> creates a fresh binding each iteration.",
+    "hint": "How many separate copies of <code>i</code> exist?",
+    "tags": ["closures", "scope"]
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "bug-binary-search-bound",
+    "kind": "bug",
+    "title": "Binary search misses a match",
+    "prompt": "<code>search([5], 5)</code> returns <code>-1</code>.",
+    "code": "function search(nums, target) {\n  let lo = 0, hi = nums.length - 1;\n  while (lo < hi) {\n    const mid = Math.floor((lo + hi) / 2);\n    if (nums[mid] === target) return mid;\n    if (nums[mid] < target) lo = mid + 1;\n    else hi = mid - 1;\n  }\n  return -1;\n}",
+    "bugLines": [3],
+    "fix": "while (lo <= hi) {",
+    "explanation": "<code>hi</code> is an inclusive bound, so when <code>lo === hi</code> there is still one unchecked candidate. With inclusive bounds, loop while <code>lo &lt;= hi</code>.",
+    "hint": "Trace it with a single element. Does the loop body run at all?",
+    "tags": ["binary search", "off-by-one"]
+  },
+  {
+    "id": "bug-sliding-window-offset",
+    "kind": "bug",
+    "title": "Window sum is too small",
+    "prompt": "<code>maxSum([1, 2, 3, 4], 2)</code> should be 7. Returns 5.",
+    "code": "function maxSum(nums, k) {\n  let sum = 0;\n  for (let i = 0; i < k; i++) sum += nums[i];\n  let best = sum;\n  for (let i = k; i < nums.length; i++) {\n    sum += nums[i] - nums[i - k + 1];\n    best = Math.max(best, sum);\n  }\n  return best;\n}",
+    "bugLines": [6],
+    "fix": "sum += nums[i] - nums[i - k];",
+    "explanation": "When <code>nums[i]</code> enters a window of size <code>k</code>, the element leaving is <code>nums[i - k]</code>. The <code>+ 1</code> removes the wrong element, one that's still inside the window.",
+    "hint": "When index <code>i</code> enters a window of size k, which index leaves?",
+    "tags": ["sliding window", "off-by-one"]
+  },
+  {
+    "id": "bug-dfs-never-marks",
+    "kind": "bug",
+    "title": "Reachability check hangs",
+    "prompt": "Hangs forever when the graph has a cycle and <code>goal</code> can't be reached.",
+    "code": "function canReach(graph, start, goal) {\n  const seen = new Set([start]);\n  const stack = [start];\n  while (stack.length) {\n    const node = stack.pop();\n    if (node === goal) return true;\n    for (const next of graph[node]) {\n      if (!seen.has(next)) stack.push(next);\n    }\n  }\n  return false;\n}",
+    "bugLines": [8],
+    "fix": "if (!seen.has(next)) { seen.add(next); stack.push(next); }",
+    "explanation": "Nodes are checked against <code>seen</code> but never added to it, so a cycle pushes the same nodes forever. Mark a node as seen when you push it.",
+    "hint": "Something is read from <code>seen</code>. Where is it ever written?",
+    "tags": ["graphs", "dfs"]
+  }
+]
