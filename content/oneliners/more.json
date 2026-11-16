@@ -1,0 +1,110 @@
+[
+  {
+    "id": "one-anagram",
+    "kind": "oneliner",
+    "title": "Anagram check",
+    "prompt": "Are strings <code>a</code> and <code>b</code> anagrams (same letters, any order)?",
+    "accept": [
+      "[...a].sort().join('') === [...b].sort().join('')",
+      "a.split('').sort().join('') === b.split('').sort().join('')"
+    ],
+    "traps": [{ "answer": "a.sort() === b.sort()", "why": "Strings have no <code>sort</code> method. Turn them into arrays, sort, and join back so <code>===</code> compares strings." }],
+    "explanation": "Sort both and compare: O(n log n). In an interview, mention the O(n) version with a 26-slot count array.",
+    "hint": "Two anagrams look identical once their letters are in order.",
+    "tags": ["strings", "sorting"]
+  },
+  {
+    "id": "one-flatten",
+    "kind": "oneliner",
+    "title": "Flatten one level",
+    "prompt": "Flatten <code>arr</code> one level: <code>[[1, 2], [3]]</code> → <code>[1, 2, 3]</code>.",
+    "accept": ["arr.flat()", "[].concat(...arr)", "arr.flatMap((x) => x)"],
+    "explanation": "<code>flat()</code> flattens one level by default. <code>flat(Infinity)</code> flattens everything.",
+    "hint": "There's an array method named after exactly this.",
+    "tags": ["arrays"]
+  },
+  {
+    "id": "one-group-by",
+    "kind": "oneliner",
+    "title": "Group by first letter",
+    "prompt": "Group <code>words</code> into an object keyed by first letter.",
+    "accept": ["Object.groupBy(words, (w) => w[0])", "Object.groupBy(words, (word) => word[0])"],
+    "explanation": "<code>Object.groupBy</code> (ES2024) returns <code>{ a: [...], b: [...] }</code>. <code>Map.groupBy</code> does the same but returns a Map. In older runtimes, use <code>reduce</code>.",
+    "hint": "ES2024 added a static method on <code>Object</code> for this.",
+    "tags": ["arrays", "objects"]
+  },
+  {
+    "id": "one-every-positive",
+    "kind": "oneliner",
+    "title": "All positive?",
+    "prompt": "Is every number in <code>nums</code> greater than 0?",
+    "accept": ["nums.every((n) => n > 0)", "nums.every((x) => x > 0)", "!nums.some((n) => n <= 0)"],
+    "traps": [{ "answer": "nums.some((n) => n > 0)", "why": "<code>some</code> asks \"is <i>any</i> positive?\". You want <code>every</code>." }],
+    "explanation": "<code>every</code> stops at the first failure. Note that <code>[].every(...)</code> is <code>true</code>.",
+    "hint": "<code>some</code> means any. Which method means all?",
+    "tags": ["arrays"]
+  },
+  {
+    "id": "one-index-of-max",
+    "kind": "oneliner",
+    "title": "Index of the max",
+    "prompt": "Get the index of the largest number in <code>nums</code>.",
+    "accept": ["nums.indexOf(Math.max(...nums))"],
+    "explanation": "Two passes, but short and clear. A single <code>reduce</code> that tracks the best index does it in one pass.",
+    "hint": "Find the max value first, then look up where it is.",
+    "tags": ["arrays", "numbers"]
+  },
+  {
+    "id": "one-clamp",
+    "kind": "oneliner",
+    "title": "Clamp",
+    "prompt": "Clamp <code>x</code> into the range <code>[lo, hi]</code>.",
+    "accept": ["Math.min(Math.max(x, lo), hi)", "Math.max(lo, Math.min(x, hi))", "Math.min(hi, Math.max(lo, x))", "Math.max(Math.min(x, hi), lo)"],
+    "explanation": "Raise <code>x</code> to at least <code>lo</code>, then cap it at <code>hi</code>, or the other way round.",
+    "hint": "Combine <code>Math.max</code> and <code>Math.min</code>.",
+    "tags": ["numbers"]
+  },
+  {
+    "id": "one-random-int",
+    "kind": "oneliner",
+    "title": "Random index",
+    "prompt": "A random integer from <code>0</code> to <code>n - 1</code>.",
+    "accept": ["Math.floor(Math.random() * n)", "Math.trunc(Math.random() * n)"],
+    "traps": [{ "answer": "Math.round(Math.random() * n)", "why": "Can return <code>n</code>, which is out of range, and gives the two end values half as often as the others." }],
+    "explanation": "<code>Math.random()</code> is in [0, 1), so <code>× n</code> is in [0, n), and <code>floor</code> gives 0 … n − 1 evenly.",
+    "hint": "<code>Math.random()</code> never returns 1. Which rounding keeps the result below n?",
+    "tags": ["numbers"]
+  },
+  {
+    "id": "one-map-to-object",
+    "kind": "oneliner",
+    "title": "Map to object",
+    "prompt": "Convert the Map <code>m</code> into a plain object.",
+    "accept": ["Object.fromEntries(m)", "Object.fromEntries(m.entries())"],
+    "traps": [{ "answer": "{ ...m }", "why": "Spread copies an object's own properties. A Map's entries aren't properties, so you get <code>{}</code>." }],
+    "explanation": "<code>Object.fromEntries</code> takes any iterable of <code>[key, value]</code> pairs, and a Map is one. Going back: <code>new Map(Object.entries(obj))</code>.",
+    "hint": "A Map iterates as <code>[key, value]</code> pairs. Which <code>Object</code> method accepts those?",
+    "tags": ["objects", "hash map"]
+  },
+  {
+    "id": "one-sleep",
+    "kind": "oneliner",
+    "title": "Sleep",
+    "prompt": "A promise that resolves after <code>ms</code> milliseconds.",
+    "accept": ["new Promise((resolve) => setTimeout(resolve, ms))", "new Promise((r) => setTimeout(r, ms))", "new Promise((res) => setTimeout(res, ms))"],
+    "explanation": "Pass <code>resolve</code> straight to <code>setTimeout</code>. Then <code>await sleep(500)</code> pauses an async function.",
+    "hint": "Wrap <code>setTimeout</code> in <code>new Promise</code>. What should the timer call?",
+    "tags": ["promises", "async"]
+  },
+  {
+    "id": "one-pad-two-digits",
+    "kind": "oneliner",
+    "title": "Two-digit padding",
+    "prompt": "Format the number <code>n</code> as two digits: <code>5</code> → <code>'05'</code>.",
+    "accept": ["String(n).padStart(2, '0')", "`${n}`.padStart(2, '0')", "n.toString().padStart(2, '0')"],
+    "traps": [{ "answer": "n.padStart(2, '0')", "why": "<code>padStart</code> is a string method, and <code>n</code> is a number. Convert it first." }],
+    "explanation": "<code>padStart(length, fill)</code> pads on the left up to the target length. Handy for clocks and dates.",
+    "hint": "Convert to a string first, then pad on the left.",
+    "tags": ["strings"]
+  }
+]

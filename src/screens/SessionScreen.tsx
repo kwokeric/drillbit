@@ -79,7 +79,7 @@ export function SessionScreen() {
           {session.pos + 1}/{session.queue.length}
         </span>
       </div>
-      {!session.schedule && <p className="practice-tag">{session.label} · practice, schedule unchanged</p>}
+      {!session.schedule && <p className="practice-tag">{session.label} · practice</p>}
       <CardRunner key={`${session.pos}-${card.id}`} card={card} schedule={session.schedule} onGrade={grade} />
       {toast && (
         <div className="toast" role="status">

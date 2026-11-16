@@ -32,7 +32,7 @@ export function SummaryScreen() {
         <h1>
           {unique} card{unique === 1 ? '' : 's'} in {mins} min
         </h1>
-        {!s.schedule && <p className="muted">Practice session: your schedule didn't change.</p>}
+        {!s.schedule && <p className="muted">Practice session: cards you'd already seen kept their schedule. New ones are now scheduled.</p>}
       </header>
 
       <div className="stat-tiles">

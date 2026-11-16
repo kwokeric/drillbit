@@ -25,7 +25,9 @@ export function GradeBar({ state, schedule, onGrade }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const okSub = schedule ? `next in ${formatInterval(intervalFor(state, 'good'))}` : "won't come back";
+  // A card's first answer is always scheduled, even in practice (interval 0 = never answered).
+  const scheduled = schedule || state.interval === 0;
+  const okSub = scheduled ? `next in ${formatInterval(intervalFor(state, 'good'))}` : 'schedule unchanged';
   return (
     <div className="gradebar">
       <div className="grades">
@@ -42,7 +44,6 @@ export function GradeBar({ state, schedule, onGrade }: Props) {
           </span>
         </button>
       </div>
-      <p className="hint">or swipe: left to repeat, right if okay</p>
     </div>
   );
 }

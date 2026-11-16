@@ -1,0 +1,112 @@
+[
+  {
+    "id": "js-nullish-vs-or",
+    "kind": "mcq",
+    "title": "?? vs ||",
+    "prompt": "What prints?",
+    "code": "const n = 0;\nconsole.log(n || 10, n ?? 10);",
+    "choices": ["<code>0 0</code>", "<code>10 10</code>", "<code>10 0</code>", "<code>0 10</code>"],
+    "correct": 2,
+    "explanation": "<code>||</code> falls back on any falsy value, including <code>0</code> and <code>''</code>. <code>??</code> only falls back on <code>null</code> or <code>undefined</code>. Use <code>??</code> for defaults where 0 is a real value.",
+    "hint": "Which operator treats <code>0</code> as missing?",
+    "tags": ["operators", "coercion"]
+  },
+  {
+    "id": "js-optional-chaining-short-circuit",
+    "kind": "mcq",
+    "title": "Optional chaining",
+    "prompt": "What happens?",
+    "code": "const user = {};\nconsole.log(user.profile?.name.first);",
+    "choices": ["Prints <code>undefined</code>", "TypeError: cannot read 'first'", "Prints <code>null</code>", "SyntaxError"],
+    "correct": 0,
+    "explanation": "When <code>?.</code> hits <code>undefined</code>, it skips the <i>whole rest of the chain</i>, so <code>.name.first</code> never runs. You don't need <code>?.</code> at every step after the first one that might be missing.",
+    "hint": "Once <code>?.</code> finds nothing, does the rest of the chain still run?",
+    "tags": ["operators", "objects"]
+  },
+  {
+    "id": "js-await-order",
+    "kind": "mcq",
+    "title": "Order around await",
+    "prompt": "What prints, in order?",
+    "code": "async function f() {\n  console.log('1');\n  await null;\n  console.log('2');\n}\nf();\nconsole.log('3');",
+    "choices": ["1 2 3", "1 3 2", "3 1 2", "2 1 3"],
+    "correct": 1,
+    "explanation": "An async function runs synchronously until its first <code>await</code>. The rest is queued as a microtask, so the caller logs 3 before the function resumes and logs 2.",
+    "hint": "How much of an async function runs before it gives control back to the caller?",
+    "tags": ["async", "event loop"]
+  },
+  {
+    "id": "js-includes-nan",
+    "kind": "mcq",
+    "title": "Finding NaN",
+    "prompt": "What prints?",
+    "code": "console.log([NaN].includes(NaN), [NaN].indexOf(NaN));",
+    "choices": ["<code>true 0</code>", "<code>false -1</code>", "<code>true -1</code>", "<code>false 0</code>"],
+    "correct": 2,
+    "explanation": "<code>indexOf</code> compares with <code>===</code>, and <code>NaN !== NaN</code>. <code>includes</code> uses SameValueZero, which treats NaN as equal to itself.",
+    "hint": "The two methods use different equality rules.",
+    "tags": ["arrays", "numbers"]
+  },
+  {
+    "id": "js-for-in-array",
+    "kind": "mcq",
+    "title": "for...in on an array",
+    "prompt": "What prints?",
+    "code": "const arr = [10, 20];\nfor (const x in arr) console.log(x);",
+    "choices": ["<code>10</code> then <code>20</code>", "<code>'0'</code> then <code>'1'</code> (strings)", "<code>0</code> then <code>1</code> (numbers)", "Nothing"],
+    "correct": 1,
+    "explanation": "<code>for...in</code> loops over property <i>keys</i>, and keys are strings. It also includes inherited enumerable keys. Use <code>for...of</code> for values, or <code>arr.entries()</code> for both.",
+    "hint": "<code>in</code> walks keys. <code>of</code> walks values.",
+    "tags": ["arrays", "control flow"]
+  },
+  {
+    "id": "js-race-vs-any",
+    "kind": "flip",
+    "title": "Promise.race vs Promise.any",
+    "prompt": "What's the difference between <code>Promise.race</code> and <code>Promise.any</code>?",
+    "explanation": "<code>race</code> settles like the first promise to settle, so an early rejection wins. <code>any</code> resolves with the first <i>fulfilled</i> promise, ignoring rejections, and only rejects (with an <code>AggregateError</code>) if all of them reject. Use <code>race</code> for timeouts and <code>any</code> for \"fastest mirror that works\".",
+    "hint": "One cares about the first promise to finish either way. The other only about the first success.",
+    "tags": ["promises", "async"]
+  },
+  {
+    "id": "js-closure-flip",
+    "kind": "flip",
+    "title": "Closures",
+    "prompt": "What is a closure? Give one practical use.",
+    "explanation": "A function together with the variables that were in scope where it was created. It keeps them alive even after the outer function returns. Uses: private state (a counter only the returned function can change), memoization caches, and the timer variable inside <code>debounce</code>.",
+    "hint": "What can an inner function still see after its outer function has returned?",
+    "tags": ["closures"]
+  },
+  {
+    "id": "ts-partial",
+    "kind": "mcq",
+    "title": "Partial<T>",
+    "prompt": "What is <code>Partial&lt;User&gt;</code>?",
+    "choices": ["<code>User</code> with every property optional", "<code>User</code> with every property readonly", "<code>User</code> without its methods", "A union of <code>User</code>'s property types"],
+    "correct": 0,
+    "explanation": "<code>Partial</code> is a mapped type that adds <code>?</code> to every property. It's handy for update payloads: <code>update(id, changes: Partial&lt;User&gt;)</code>. Its relatives are <code>Required</code>, <code>Readonly</code>, <code>Pick</code> and <code>Omit</code>.",
+    "hint": "Think of a PATCH request that only sends the fields that changed.",
+    "tags": ["typescript", "types"]
+  },
+  {
+    "id": "ts-generic-constraint",
+    "kind": "mcq",
+    "title": "Generic constraint",
+    "prompt": "What happens with this call?",
+    "code": "function longest<T extends { length: number }>(a: T, b: T) {\n  return a.length >= b.length ? a : b;\n}\nlongest(10, 20);",
+    "choices": ["Returns <code>20</code>", "Returns <code>10</code>", "Compile error: <code>number</code> has no <code>length</code>", "Runtime TypeError"],
+    "correct": 2,
+    "explanation": "<code>extends { length: number }</code> means T must have a numeric <code>length</code>. Strings and arrays do. <code>number</code> doesn't, so the call fails to compile and never runs.",
+    "hint": "What does <code>extends</code> require of T?",
+    "tags": ["typescript", "generics"]
+  },
+  {
+    "id": "ts-satisfies",
+    "kind": "flip",
+    "title": "satisfies",
+    "prompt": "What does <code>satisfies</code> do that a type annotation doesn't?",
+    "explanation": "Both check the value against the type. An annotation (<code>const x: T = …</code>) then makes <code>x</code> exactly <code>T</code>, losing details. <code>satisfies T</code> keeps the narrower inferred type, so literal values and the exact keys of an object stay known.",
+    "hint": "After the check, which one keeps the more specific inferred type?",
+    "tags": ["typescript", "types"]
+  }
+]

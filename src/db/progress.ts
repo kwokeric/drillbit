@@ -60,24 +60,23 @@ export async function reviewMap(): Promise<Map<string, ReviewRow>> {
 }
 
 /**
- * Records one answer. With `schedule: false` (Cram, Weak spots, practice) the card's schedule is left alone,
- * but hints and the daily log are still counted.
+ * Records one answer. With `schedule: false` (Cram, Weak spots, trying one card) a card you've seen before keeps
+ * its schedule, but hints and the daily log are still counted. The first answer to a new card is always scheduled,
+ * wherever it happens, so the card doesn't come back as "new" in the next drill.
  */
 export async function recordAnswer(cardId: string, grade: Grade, hinted: boolean, schedule: boolean, now = Date.now()) {
   await db.transaction('rw', db.reviews, db.log, async () => {
     const prev = await db.reviews.get(cardId);
     const isNew = !prev;
     const base: ReviewRow = prev ?? { cardId, ...newState(now), hintsUsed: 0, lastReviewed: 0 };
-    const srs = schedule ? next(base, grade, now) : {};
-    if (schedule || prev) {
-      await db.reviews.put({ ...base, ...srs, hintsUsed: base.hintsUsed + (hinted ? 1 : 0), lastReviewed: now });
-    }
+    const srs = schedule || isNew ? next(base, grade, now) : {};
+    await db.reviews.put({ ...base, ...srs, hintsUsed: base.hintsUsed + (hinted ? 1 : 0), lastReviewed: now });
     const day = dayKey(now);
     const log = (await db.log.get(day)) ?? { day, reviews: 0, again: 0, hints: 0, newCards: 0 };
     log.reviews++;
     if (grade === 'again') log.again++;
     if (hinted) log.hints++;
-    if (schedule && isNew) log.newCards++;
+    if (isNew) log.newCards++;
     await db.log.put(log);
   });
 }

@@ -84,7 +84,7 @@ export function DeckDetail({ id }: { id: DeckId }) {
           );
         })}
       </ul>
-      <p className="muted small">Tap a card to try it. Trying a single card doesn't change its schedule.</p>
+      <p className="muted small">Tap a card to try it. A new card counts as learned the first time you answer it. Cards you've already seen keep their schedule.</p>
     </div>
   );
 }
