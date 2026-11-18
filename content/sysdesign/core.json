@@ -1,0 +1,579 @@
+[
+  {
+    "id": "sd-requirements-first",
+    "kind": "flip",
+    "deck": "sysdesign",
+    "title": "The first five minutes",
+    "prompt": "The interviewer says \"Design a photo-sharing app.\" What do you do before drawing any boxes?",
+    "explanation": "Pin down the scope: list 3–4 core features (functional requirements) and the qualities that matter (scale, latency, consistency, availability). A rough estimate of users and read/write ratio decides whether you need caching, sharding or queues at all. Jumping straight into components is the most common way candidates fail.",
+    "hint": "Two kinds of requirements, then a number or two.",
+    "tags": [
+      "interview approach"
+    ]
+  },
+  {
+    "id": "sd-cap-theorem",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "What CAP actually says",
+    "prompt": "Which statement about the CAP theorem is accurate?",
+    "choices": [
+      "Pick any two of consistency, availability and partition tolerance",
+      "When the network splits, a replica must either refuse requests (stay consistent) or answer with possibly stale data (stay available)",
+      "SQL databases are CA and NoSQL databases are AP",
+      "The C in CAP means the same thing as the C in ACID"
+    ],
+    "correct": 1,
+    "explanation": "Partitions happen in any distributed system, so P isn't optional. The real choice is C or A <i>during a partition</i>. \"Pick two\" is the popular but misleading version. Database labels like \"CA\" don't hold up either: a single-node database isn't distributed, and many databases let you tune the trade-off. CAP's C means every read sees the latest write (linearizability). ACID's C means the data obeys your constraints. Bonus: PACELC adds that <i>else</i>, with no partition, you still trade latency against consistency.",
+    "hint": "Can a distributed system opt out of network failures?",
+    "tags": [
+      "consistency",
+      "CAP"
+    ]
+  },
+  {
+    "id": "sd-consistency-per-feature",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Where eventual consistency is fine",
+    "prompt": "In a marketplace app, which feature can safely be <b>eventually consistent</b>?",
+    "choices": [
+      "Deducting money from a wallet balance",
+      "Reserving the last seat on a flight",
+      "The like count shown on a listing",
+      "Checking whether a username is already taken"
+    ],
+    "correct": 2,
+    "explanation": "If a like count is a few seconds behind, nobody is harmed. Money, the last unit of inventory and uniqueness checks all break if two replicas disagree: you get overdrafts, double bookings and duplicate usernames. Strong consistency costs latency and availability, so spend it only where a stale read causes real damage.",
+    "hint": "Which one hurts nobody if it's a few seconds stale?",
+    "tags": [
+      "consistency",
+      "CAP"
+    ]
+  },
+  {
+    "id": "sd-db-orders",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Database for orders and payments",
+    "prompt": "An e-commerce app stores users, orders, line items and payments. Reports join across all of them. Which database fits best?",
+    "choices": [
+      "A relational database such as PostgreSQL",
+      "A document store such as MongoDB, one document per user",
+      "A wide-column store such as Cassandra",
+      "A key-value store such as Redis"
+    ],
+    "correct": 0,
+    "explanation": "The data is relational, needs multi-row transactions (charge the card <i>and</i> create the order) and gets queried in ways you can't fully predict. That's what SQL is for, and Postgres scales further than most interviews require. Documents get awkward once you join across entities. Cassandra is built for huge write volume with known query patterns. Redis is a cache, not a system of record. Default to SQL and justify any move away from it.",
+    "hint": "Joins plus transactions that touch several tables.",
+    "tags": [
+      "databases",
+      "SQL vs NoSQL"
+    ]
+  },
+  {
+    "id": "sd-db-chat",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Storing billions of chat messages",
+    "prompt": "A chat app writes billions of messages a day. Almost every read is \"the latest 50 messages in conversation X\". Which storage fits best?",
+    "choices": [
+      "One big Postgres table with an index on <code>created_at</code>",
+      "Elasticsearch",
+      "A graph database",
+      "A wide-column store such as Cassandra, partitioned by conversation and sorted by time"
+    ],
+    "correct": 3,
+    "explanation": "Wide-column stores are built for huge append-heavy write volume and one known access pattern. Partition by <code>conversation_id</code>, sort by time, and \"latest 50\" becomes a single sequential read. One Postgres table hits write and size limits at this scale unless you shard it yourself. Elasticsearch suits searching messages, not storing them. A graph database solves a different problem: relationships between entities.",
+    "hint": "Huge write volume, and a single query pattern you know in advance.",
+    "tags": [
+      "databases",
+      "SQL vs NoSQL"
+    ]
+  },
+  {
+    "id": "sd-redis-uses",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "What Redis is good for",
+    "prompt": "Which job is the <b>worst</b> fit for Redis?",
+    "choices": [
+      "A cache in front of a slow database query",
+      "Per-user rate-limit counters with a TTL",
+      "A leaderboard (sorted set)",
+      "The only copy of user account data"
+    ],
+    "correct": 3,
+    "explanation": "Redis keeps data in memory. It can persist to disk, but the defaults can lose recent writes, and memory caps the size of the dataset. It shines for fast, rebuildable or short-lived data: caches, sessions, counters with expiry, sorted-set leaderboards and pub/sub. Keep your source of truth in a durable database.",
+    "hint": "Where does Redis keep the data, and what happens on a crash?",
+    "tags": [
+      "databases",
+      "caching"
+    ]
+  },
+  {
+    "id": "sd-search",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Product search",
+    "prompt": "Users need typo-tolerant, relevance-ranked search across 50M product listings. What's the usual approach?",
+    "choices": [
+      "<code>WHERE title LIKE '%term%'</code> in the main database",
+      "A search index such as Elasticsearch or OpenSearch, kept in sync from the main database",
+      "Load every listing into the browser and filter on the client",
+      "A B-tree index on <code>title</code>"
+    ],
+    "correct": 1,
+    "explanation": "Search engines build an <i>inverted index</i> (term → documents) with fuzzy matching and ranking. Sync it from your database, for example via change-data-capture or a queue, and accept that results may lag by a few seconds. A leading-wildcard <code>LIKE</code> can't use a B-tree index, so it scans every row. A B-tree helps only with prefix matches, never with typos or ranking.",
+    "hint": "Think of the index at the back of a book.",
+    "tags": [
+      "databases",
+      "search"
+    ]
+  },
+  {
+    "id": "sd-file-uploads",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Where uploaded images go",
+    "prompt": "Users upload profile photos and videos. Where should the files live?",
+    "choices": [
+      "As BLOBs in the main SQL database",
+      "On the app server's local disk",
+      "In object storage (such as S3) served through a CDN, with only the URL or key in the database",
+      "Base64-encoded inside a JSON column"
+    ],
+    "correct": 2,
+    "explanation": "Object storage is cheap, durable and effectively unlimited, and a CDN serves the files from near the user. A common full-stack trick: the server hands the client a short-lived <b>presigned URL</b>, and the browser uploads straight to storage without tying up your servers. BLOBs bloat the database and its backups. A local disk disappears when you add a second server or replace this one. Base64 adds about 33% to the size.",
+    "hint": "Your app servers should stay stateless, and the database should hold metadata.",
+    "tags": [
+      "storage",
+      "CDN"
+    ]
+  },
+  {
+    "id": "sd-oltp-olap",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Analytics dashboards",
+    "prompt": "Product wants dashboards like \"daily active users by country over 12 months\", built from billions of events. Where should those queries run?",
+    "choices": [
+      "On the production Postgres primary",
+      "In a columnar data warehouse (such as BigQuery, Snowflake or ClickHouse), loaded from events",
+      "In Redis",
+      "Computed in the browser from raw events"
+    ],
+    "correct": 1,
+    "explanation": "This is OLAP: scans and aggregates over a few columns of huge tables. Columnar stores read only the columns a query needs and compress them well. Running these queries on the transactional (OLTP) primary competes with user traffic and can slow the whole app. Redis and the browser can't hold billions of events.",
+    "hint": "Row-oriented vs column-oriented storage.",
+    "tags": [
+      "databases",
+      "analytics"
+    ]
+  },
+  {
+    "id": "sd-last-item-race",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Two buyers, one item left",
+    "prompt": "Two requests both read <code>stock = 1</code>, both pass the check in app code and both write <code>stock = 0</code>. Two orders are created. What's the simplest correct fix?",
+    "choices": [
+      "Add a cache in front of the stock read",
+      "Re-check the stock in the frontend before submitting",
+      "Run the check in a separate transaction before the write",
+      "Make the write conditional: <code>UPDATE items SET stock = stock - 1 WHERE id = $1 AND stock > 0</code>, then check the affected row count"
+    ],
+    "correct": 3,
+    "explanation": "This is a <b>lost update</b>, a read-then-write race. A conditional update makes the database do the check and the write atomically, and the losing request sees 0 rows affected. <code>SELECT … FOR UPDATE</code> inside one transaction also works. The other choices still read first and write later, so the race window stays open. Postgres's default isolation level (Read Committed) doesn't prevent this on its own.",
+    "hint": "Move the check to where the write happens.",
+    "tags": [
+      "databases",
+      "transactions"
+    ]
+  },
+  {
+    "id": "sd-composite-index",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Composite index order",
+    "prompt": "A table has an index on <code>(user_id, created_at)</code>. Which query can <b>not</b> use it efficiently?",
+    "choices": [
+      "<code>WHERE user_id = 7</code>",
+      "<code>WHERE user_id = 7 AND created_at > '2026-01-01'</code>",
+      "<code>WHERE user_id = 7 ORDER BY created_at DESC LIMIT 20</code>",
+      "<code>WHERE created_at > '2026-01-01'</code>"
+    ],
+    "correct": 3,
+    "explanation": "A B-tree on <code>(a, b)</code> is sorted by <code>a</code> first, like a phone book sorted by last name, then first name. Queries that filter on <code>a</code>, on <code>a</code> and <code>b</code>, or on <code>a</code> sorted by <code>b</code> can use it. Filtering on <code>b</code> alone means checking every <code>a</code> group (the \"leftmost prefix\" rule). Also remember that every index speeds up reads but slows down writes.",
+    "hint": "Can you look up everyone named \"Sam\" in a phone book sorted by last name?",
+    "tags": [
+      "databases",
+      "indexes"
+    ]
+  },
+  {
+    "id": "sd-n-plus-one",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "The slow feed endpoint",
+    "prompt": "<code>GET /feed</code> loads 50 posts, then runs a separate query for each post's author. Locally it's fast. In production it takes 2 s. What's the problem?",
+    "choices": [
+      "The N+1 query problem: 51 database round trips instead of 1–2",
+      "The posts table needs a bigger cache",
+      "JSON serialization is slow",
+      "The CDN isn't caching the endpoint"
+    ],
+    "correct": 0,
+    "explanation": "Each query costs a network round trip, which is tiny locally and adds up in production. Fetch the authors in one go: a <code>JOIN</code>, <code>WHERE id IN (…)</code>, your ORM's eager loading, or a DataLoader in GraphQL resolvers. GraphQL is especially prone to N+1 because each field resolves on its own.",
+    "hint": "Count the queries.",
+    "tags": [
+      "databases",
+      "APIs"
+    ]
+  },
+  {
+    "id": "sd-stateless-servers",
+    "kind": "flip",
+    "deck": "sysdesign",
+    "title": "Why stateless app servers?",
+    "prompt": "Why do designs insist that web/API servers be <b>stateless</b>, and where does the state go instead?",
+    "explanation": "If any server can handle any request, you can add or remove servers freely behind a load balancer (horizontal scaling), and a crash loses nothing. State moves to shared stores: sessions in Redis or a signed cookie, files in object storage, data in the database. Vertical scaling (a bigger machine) is simpler but has a ceiling and is a single point of failure.",
+    "hint": "What happens to a user's session when the load balancer sends them to a different server?",
+    "tags": [
+      "scaling"
+    ]
+  },
+  {
+    "id": "sd-realtime-transport",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Live score updates",
+    "prompt": "A sports page pushes score updates to the browser every few seconds. The client never sends anything back. What's the simplest good choice?",
+    "choices": [
+      "WebSockets",
+      "Server-Sent Events (<code>EventSource</code>)",
+      "Polling every 100 ms",
+      "WebRTC"
+    ],
+    "correct": 1,
+    "explanation": "SSE is one-way, server to client, over plain HTTP. It reconnects automatically and works with ordinary proxies and auth. WebSockets are two-way and earn their extra complexity in chat or multiplayer. Fast polling wastes requests, and slow polling adds delay. WebRTC is for peer-to-peer media. Gotcha: under HTTP/1.1, browsers allow only about 6 connections per domain, so many SSE tabs can starve each other. HTTP/2 fixes this.",
+    "hint": "Data flows in only one direction.",
+    "tags": [
+      "real-time",
+      "APIs"
+    ]
+  },
+  {
+    "id": "sd-websocket-scaling",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Chat across many servers",
+    "prompt": "Chat users hold WebSocket connections spread across 20 servers. Alice is connected to server 3 and Bob to server 11. How does Alice's message reach Bob?",
+    "choices": [
+      "The load balancer forwards it automatically",
+      "Make all clients connect to one server",
+      "Server 3 publishes it to a pub/sub layer (such as Redis pub/sub or Kafka), and the server holding Bob's connection pushes it to him",
+      "Bob's client polls server 3"
+    ],
+    "correct": 2,
+    "explanation": "Each server knows only its own connections, so you need a backplane: publish by conversation or user, and every server delivers to its local sockets. A presence or connection registry can say which server holds whom. The load balancer only routes new connections. One server can't hold everyone, and a client can't know which server to poll. Also plan for reconnects: when a server restarts, clients reconnect and fetch what they missed.",
+    "hint": "The servers need a way to talk to each other.",
+    "tags": [
+      "real-time",
+      "scaling"
+    ]
+  },
+  {
+    "id": "sd-cache-aside",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Keeping the cache fresh",
+    "prompt": "With a cache-aside setup (read: check the cache, fall back to the DB, fill the cache), what should a profile update do?",
+    "choices": [
+      "Update the DB, then <b>delete</b> the cache key",
+      "Update the cache, then the DB",
+      "Update only the cache. The DB catches up later",
+      "Nothing. The TTL will expire it eventually"
+    ],
+    "correct": 0,
+    "explanation": "Write to the source of truth first, then invalidate, so the next read refills the cache from fresh data. Updating the cache first leaves wrong data cached if the DB write fails. Writing only to the cache makes the cache the source of truth. Relying only on the TTL serves stale data until it expires. Still set a TTL as a backstop, because a small race remains (a slow reader can put back a stale value).",
+    "hint": "Write the source of truth, then invalidate rather than update.",
+    "tags": [
+      "caching"
+    ]
+  },
+  {
+    "id": "sd-cache-stampede",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "The homepage key expires",
+    "prompt": "A hot cache key expires, and 5,000 requests miss at once and all hit the database, which falls over. What's this called, and what helps?",
+    "choices": [
+      "Cache penetration. Fix: a bigger cache",
+      "Split brain. Fix: more replicas",
+      "Hot partition. Fix: a new shard key",
+      "Cache stampede (thundering herd). Fix: let one request rebuild while the others wait or get stale data, and add jitter to TTLs"
+    ],
+    "correct": 3,
+    "explanation": "Coalesce the misses with a lock or single-flight so only one request recomputes, serve the stale value while it refreshes, and randomize TTLs so keys don't all expire together. Cache penetration is a different problem: repeated lookups for keys that don't exist. Split brain and hot partitions concern replication and sharding.",
+    "hint": "Thousands of requests all trying to rebuild the same value.",
+    "tags": [
+      "caching"
+    ]
+  },
+  {
+    "id": "sd-http-cache-headers",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Caching a built web app",
+    "prompt": "A Vite build outputs <code>index.html</code> and <code>app.3f9a2c.js</code>. Which <code>Cache-Control</code> headers fit?",
+    "choices": [
+      "Both: <code>max-age=31536000</code>",
+      "Both: <code>no-store</code>",
+      "HTML: <code>no-cache</code>. Hashed JS: <code>max-age=31536000, immutable</code>",
+      "HTML: <code>max-age=31536000</code>. JS: <code>no-cache</code>"
+    ],
+    "correct": 2,
+    "explanation": "A hashed filename changes whenever its content changes, so it can be cached forever. The HTML must stay fresh because it points at the current hashes. Gotcha: <code>no-cache</code> doesn't mean \"don't cache\". It means \"store it, but revalidate (ETag/304) before using it\". <code>no-store</code> is the one that forbids storing. Caching the HTML for a year strands users on an old deploy.",
+    "hint": "Which file's name changes when its content changes?",
+    "tags": [
+      "caching",
+      "CDN",
+      "frontend"
+    ]
+  },
+  {
+    "id": "sd-read-replica-lag",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "My edit disappeared",
+    "prompt": "Writes go to the primary and reads go to async read replicas. A user saves their bio, the page reloads and shows the old bio. Why, and what's a common fix?",
+    "choices": [
+      "Replication lag. Fix: read-your-writes, routing that user's reads to the primary for a short time after they write",
+      "The browser cached the old page. Fix: a hard refresh",
+      "The write failed. Fix: retry",
+      "A deadlock. Fix: increase the lock timeout"
+    ],
+    "correct": 0,
+    "explanation": "Asynchronous replicas trail the primary by milliseconds to seconds. Read-your-writes consistency means routing a user's reads to the primary after their own write, or waiting until a replica has caught up. Updating the UI optimistically from the response also hides the lag. Replicas scale reads, but they don't help with write load.",
+    "hint": "Where did the write go, and where did the read come from?",
+    "tags": [
+      "databases",
+      "replication",
+      "consistency"
+    ]
+  },
+  {
+    "id": "sd-shard-key",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Picking a shard key",
+    "prompt": "You're sharding a tweets table. Which shard key causes a <b>hot partition</b>?",
+    "choices": [
+      "<code>hash(tweet_id)</code>",
+      "<code>hash(user_id)</code>, accepting that a celebrity's shard may get busy",
+      "<code>created_date</code>, so all of today's writes go to one shard",
+      "<code>hash(user_id, tweet_id)</code>"
+    ],
+    "correct": 2,
+    "explanation": "Sharding by time sends every new write to the newest shard while the old ones sit idle. A good key spreads load evenly <i>and</i> matches your common queries. <code>user_id</code> keeps a user's tweets together but can make a celebrity's shard hot. A tweet-id hash spreads load evenly but makes \"all tweets by a user\" fan out to every shard. Shard only once replicas, caching and a bigger box are exhausted, because cross-shard joins and transactions get hard.",
+    "hint": "Which key sends every new write to the same place?",
+    "tags": [
+      "databases",
+      "sharding"
+    ]
+  },
+  {
+    "id": "sd-message-queue",
+    "kind": "flip",
+    "deck": "sysdesign",
+    "title": "When to add a queue",
+    "prompt": "Signup must also send a welcome email, resize the avatar and sync to the CRM. Why put those behind a message queue, and what's the catch?",
+    "explanation": "The request returns as soon as the user row is saved. Slow or flaky work runs in background workers that retry on failure and can scale on their own, and the queue absorbs traffic spikes. The catch: most queues deliver <b>at least once</b>, so each job must be idempotent (sending the email twice must be harmless), and the results are eventually consistent.",
+    "hint": "Think about request latency, failure and spikes. Then: how many times can a message arrive?",
+    "tags": [
+      "queues",
+      "async"
+    ]
+  },
+  {
+    "id": "sd-idempotency-key",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Double charge on retry",
+    "prompt": "The client sends <code>POST /payments</code>, the network times out and the client retries. The server had actually processed the first request, so the user is charged twice. What's the standard fix?",
+    "choices": [
+      "Never retry POST requests",
+      "Make it a GET",
+      "The client generates an <b>idempotency key</b> per payment attempt and sends it with every retry. The server stores the result per key and returns that result for repeats",
+      "Increase the client timeout"
+    ],
+    "correct": 2,
+    "explanation": "A timeout doesn't tell the client whether the server did the work, so retries must be safe. With a stored key and a unique constraint, repeats return the original response instead of charging again. Stripe's API works this way. Never retrying gives up on transient failures. GET must not have side effects. A longer timeout only makes the race less likely.",
+    "hint": "How can the server tell that two requests are the same attempt?",
+    "tags": [
+      "APIs",
+      "reliability"
+    ]
+  },
+  {
+    "id": "sd-rate-limiting",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Rate limiting an API",
+    "prompt": "You need to limit each API key to 100 requests per minute while allowing short bursts, across 10 API servers. What's a solid design?",
+    "choices": [
+      "A counter in each server's memory",
+      "A token bucket per key in a shared store such as Redis. Over the limit, return <code>429</code> with <code>Retry-After</code>",
+      "Disable the client's button for 1 s after each click",
+      "Return <code>500</code> when traffic is high"
+    ],
+    "correct": 1,
+    "explanation": "A token bucket refills at a steady rate and allows bursts up to its size. The state must be shared, or each of the 10 servers allows 100 and the real limit becomes 1,000. <code>429 Too Many Requests</code> tells clients to back off, and <code>Retry-After</code> says for how long. Client-side throttling is nice UX, but it isn't enforcement. 500 tells clients the server broke.",
+    "hint": "Where does the counter live if there are 10 servers?",
+    "tags": [
+      "APIs",
+      "reliability"
+    ]
+  },
+  {
+    "id": "sd-pagination",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Infinite scroll pagination",
+    "prompt": "An infinite-scroll feed uses <code>?offset=…&limit=20</code>. Users see duplicate posts as new ones arrive, and deep pages are slow. What's better?",
+    "choices": [
+      "Bigger pages",
+      "Load the whole feed once",
+      "Page numbers instead of offsets",
+      "Cursor (keyset) pagination: <code>WHERE (created_at, id) < (cursor) ORDER BY created_at DESC, id DESC LIMIT 20</code>"
+    ],
+    "correct": 3,
+    "explanation": "An offset counts rows, so new inserts shift everything and you see duplicates. <code>OFFSET 10000</code> still reads and throws away 10,000 rows. A cursor remembers <i>where you stopped</i>, is stable under inserts, and is an index seek at any depth. Include a unique tiebreaker such as <code>id</code>, or rows with equal timestamps get skipped. Page numbers are just offsets. The trade-off: you can't jump to page 37.",
+    "hint": "Remember a position, not a count.",
+    "tags": [
+      "APIs",
+      "databases",
+      "frontend"
+    ]
+  },
+  {
+    "id": "sd-graphql-vs-rest",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "When GraphQL earns its keep",
+    "prompt": "Which is the strongest reason to choose GraphQL over REST?",
+    "choices": [
+      "It's faster because it uses a binary protocol",
+      "Several clients (web, iOS, Android) need different shapes of deeply related data, and you want to avoid over-fetching and many round trips",
+      "It caches better at the CDN out of the box",
+      "It removes the need for authorization checks"
+    ],
+    "correct": 1,
+    "explanation": "GraphQL lets each client ask for exactly the fields it needs in one request. The costs: a single POST endpoint loses free HTTP/CDN caching, N+1 resolvers need DataLoader, and malicious deep queries need depth or cost limits. It's JSON over HTTP, not binary (that's gRPC), and you still authorize every field.",
+    "hint": "Who benefits from choosing their own response shape?",
+    "tags": [
+      "APIs"
+    ]
+  },
+  {
+    "id": "sd-auth-tokens",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Sessions vs JWTs",
+    "prompt": "Which statement about JWT auth for a web app is accurate?",
+    "choices": [
+      "A JWT can't be revoked before it expires unless you add server-side state, such as a denylist or short expiry with refresh tokens",
+      "JWTs are encrypted, so the payload is secret",
+      "<code>localStorage</code> is the safest place to keep them",
+      "JWTs make CSRF impossible no matter where they're stored"
+    ],
+    "correct": 0,
+    "explanation": "A JWT is self-contained, so the server trusts it until <code>exp</code>. That's why access tokens are short-lived (minutes) and paired with a revocable refresh token. A standard JWT is signed, not encrypted: anyone can base64-decode it. <code>localStorage</code> is readable by any XSS script, while an <code>HttpOnly</code> cookie isn't. A cookie brings CSRF back, though, so use <code>SameSite</code> or CSRF tokens. Plain server sessions are often the simpler choice for one web app.",
+    "hint": "What does the server have to remember to log someone out?",
+    "tags": [
+      "auth",
+      "security"
+    ]
+  },
+  {
+    "id": "sd-rendering-strategy",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Rendering strategy",
+    "prompt": "Which pairing is the <b>best</b> fit?",
+    "choices": [
+      "Marketing pages and blog → client-side render (CSR); logged-in analytics dashboard → static generation (SSG)",
+      "Everything → SSR on every request",
+      "Product pages that change hourly → static generation with periodic revalidation (ISR); logged-in dashboard → CSR or SSR",
+      "Everything → CSR, because SEO no longer matters"
+    ],
+    "correct": 2,
+    "explanation": "Public pages that need SEO and fast first paint suit pre-rendered or cached HTML (SSG/ISR), refreshed on a schedule or on demand. Private, highly personal screens gain nothing from SEO, so CSR or SSR is fine. CSR for marketing pages hurts first paint and crawlability, and SSG can't pre-render per-user data. SSR on every request costs server time on pages that could be cached.",
+    "hint": "Ask two questions per page: does SEO matter, and how personal is the data?",
+    "tags": [
+      "frontend",
+      "rendering"
+    ]
+  },
+  {
+    "id": "sd-typeahead",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Search-as-you-type",
+    "prompt": "A search box fires a request on every keystroke. Results flicker, and older responses sometimes overwrite newer ones. Which set of fixes is right?",
+    "choices": [
+      "Debounce input (~200–300 ms), cancel or ignore stale requests (<code>AbortController</code> or a request id), and cache results per query",
+      "Throttle to one request per 5 s",
+      "Fetch the whole dataset on page load",
+      "Add a loading spinner"
+    ],
+    "correct": 0,
+    "explanation": "Debouncing cuts the number of requests. Cancelling, or keeping only the latest response, fixes the race where a slow response for \"re\" lands after the one for \"react\". A small cache makes backspacing instant. The server side should be a prefix index (trie or search engine) with short TTL caching. A 5 s throttle feels broken, loading everything doesn't scale, and a spinner hides nothing.",
+    "hint": "Two problems: too many requests, and responses arriving out of order.",
+    "tags": [
+      "frontend",
+      "APIs"
+    ]
+  },
+  {
+    "id": "sd-back-of-envelope",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "Back-of-the-envelope QPS",
+    "prompt": "10 million daily active users each make about 20 API requests a day. Roughly what's the <b>average</b> request rate?",
+    "choices": [
+      "~200 req/s",
+      "~2,000 req/s",
+      "~20,000 req/s",
+      "~200,000 req/s"
+    ],
+    "correct": 1,
+    "explanation": "200M requests ÷ ~100,000 seconds per day (86,400, rounded) ≈ 2,000 req/s. Peaks are often 2–5× the average, so plan for about 5–10k. That's comfortably handled by a few stateless servers plus a cache, and a single well-indexed database with read replicas can often cope. Do the maths out loud. It shows when you <i>don't</i> need sharding.",
+    "hint": "A day has about 10⁵ seconds.",
+    "tags": [
+      "estimation",
+      "scaling"
+    ]
+  },
+  {
+    "id": "sd-unique-ids",
+    "kind": "mcq",
+    "deck": "sysdesign",
+    "title": "IDs across many shards",
+    "prompt": "With a sharded database, auto-increment IDs collide across shards. You want IDs that are unique, roughly time-sortable and generated without a central bottleneck. What fits?",
+    "choices": [
+      "Random UUIDv4",
+      "<code>Date.now()</code> in milliseconds",
+      "One central counter service for every insert",
+      "A Snowflake-style ID (timestamp + machine id + sequence) or a UUIDv7"
+    ],
+    "correct": 3,
+    "explanation": "Snowflake packs a millisecond timestamp, a worker id and a per-millisecond counter into 64 bits: each machine generates IDs independently, and they sort by time. UUIDv7 works the same way in 128 bits. UUIDv4 is unique but random, so inserts land all over the B-tree index, and the IDs don't sort by time. A raw timestamp collides when two inserts share a millisecond. A central counter is a bottleneck and a single point of failure.",
+    "hint": "Combine time, who generated it, and a counter.",
+    "tags": [
+      "databases",
+      "sharding"
+    ]
+  }
+]

@@ -22,12 +22,13 @@ Phone-first PWA of interview-prep cards: spot the bug, JS/TS fundamentals, algor
 
 When asked to draft cards, write them straight into `content/` and run `npm run validate` and `npm test`.
 
-- `id`: kebab-case and unique. Prefixes: `bug-`, `js-`, `ts-`, `lc-<number>-`, `one-`.
+- `id`: kebab-case and unique. Prefixes: `bug-`, `js-`, `ts-`, `lc-<number>-`, `one-`, `sd-`.
 - `prompt` and `explanation` may use inline HTML: `<code>`, `<b>`, `<i>`, `<br>`. Code fields (`code`, `fix`, `accept`) are plain text.
 - Always write a `hint`. It should point at the idea without naming the answer. Card types without one get an automatic hint, which is weaker.
 - **bug**: 5–10 lines with exactly one real bug. `bugLines` are 1-indexed and the first one is the root cause. Optional `symptomLines` are where the symptom shows (tapping one gives "close"). The prompt states the symptom, not the cause.
 - **mcq**: 3–4 choices, each plausible. Explain why the wrong ones are wrong.
 - **flip**: an open question answered from memory. Keep the explanation to 2–3 sentences.
+- **system design**: mcq or flip cards with `"deck": "sysdesign"`, in `content/sysdesign/`. Aim at full-stack interviews: trade-offs, which store or protocol fits, and the common gotcha.
 - **pattern**: summarize the LeetCode problem in 1–2 sentences in your own words. Never copy the problem statement. `patterns` must come from `PATTERNS` in the schema. 2–4 `steps`.
 - **oneliner**: list every common correct spelling in `accept` (matching ignores whitespace, quote style, a trailing `;`, and `(x) =>` vs `x =>`). Put common wrong answers in `traps` with a `why`.
 - Check every code claim by actually running it in Node when there's any doubt.

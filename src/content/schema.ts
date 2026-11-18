@@ -34,6 +34,8 @@ const base = {
   tags: z.array(z.string()).min(1),
   /** A nudge that points at the idea without giving the answer away. */
   hint: z.string().optional(),
+  /** Puts an mcq or flip card in a deck other than Fundamentals. */
+  deck: z.literal('sysdesign').optional(),
 };
 
 const BugCard = z.object({
@@ -97,13 +99,14 @@ export type CardKind = Card['kind'];
 export type CardOf<K extends CardKind> = Extract<Card, { kind: K }>;
 export const ContentFile = z.union([Card, z.array(Card)]);
 
-/** Decks shown in the app. 'mcq' and 'flip' cards both belong to Fundamentals. */
-export type DeckId = 'bug' | 'fundamentals' | 'pattern' | 'oneliner';
+/** Decks shown in the app. 'mcq' and 'flip' cards belong to Fundamentals unless they set `deck`. */
+export type DeckId = 'bug' | 'fundamentals' | 'pattern' | 'oneliner' | 'sysdesign';
 export const DECKS: { id: DeckId; name: string; short: string; color: string; kindClass: string }[] = [
   { id: 'bug', name: 'Spot the bug', short: 'Spot the bug', color: 'var(--bad)', kindClass: 'k-bug' },
   { id: 'fundamentals', name: 'JS / TS fundamentals', short: 'JS / TS', color: 'var(--tn)', kindClass: 'k-js' },
   { id: 'pattern', name: 'Algo patterns', short: 'Algo pattern', color: 'var(--accent)', kindClass: 'k-pat' },
   { id: 'oneliner', name: 'One-liners', short: 'One-liner', color: 'var(--ok)', kindClass: 'k-one' },
+  { id: 'sysdesign', name: 'System design', short: 'System design', color: 'var(--tk)', kindClass: 'k-sys' },
 ];
-export const deckOf = (c: Card): DeckId => (c.kind === 'mcq' || c.kind === 'flip' ? 'fundamentals' : c.kind);
+export const deckOf = (c: Card): DeckId => c.deck ?? (c.kind === 'mcq' || c.kind === 'flip' ? 'fundamentals' : c.kind);
 export const deckInfo = (c: Card) => DECKS.find((d) => d.id === deckOf(c))!;

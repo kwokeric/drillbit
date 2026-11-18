@@ -59,7 +59,7 @@ export function CardFrame({ card, ctx, headRight, children, reveal, controls }: 
       <div className="pbody">
         <article className="icard">
           <header className="icard-head">
-            <span className={`kind ${deck.kindClass}`}>{card.kind === 'flip' ? 'Flip card' : deck.short}</span>
+            <span className={`kind ${deck.kindClass}`}>{card.kind === 'flip' && deck.id === 'fundamentals' ? 'Flip card' : deck.short}</span>
             {headRight ?? <span className="lc">{card.tags.slice(0, 2).join(' · ')}</span>}
           </header>
           <div className="icard-body">
